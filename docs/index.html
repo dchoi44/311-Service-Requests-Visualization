@@ -14,18 +14,18 @@
 		height:auto;
 		margin:auto;
 	}
-	    
+
 	#exe2{
 		position:relative;
 		height:auto;
 		margin:auto;
 	}
-	    
+
         p {
 		font-size: 15px;
 		font-family: Helvetica, Arial, sans-serif;
           }
-	
+
 	div.bar {
 		display: inline-block;
 		width: 20px;
@@ -60,7 +60,7 @@
 	}
 	.wrapper {
 	   	text-align: center;
-	
+
   </style>
   </head>
   <body>
@@ -72,7 +72,7 @@
 
     <section class="main-content">
 
-	<div id="exe2">		
+	<div id="exe2">
 		<h1>Assignment 2B: Visualizing Geodata</h1>
         	<p> The graph below shows prostitution in San Fransico clustered using the k-means algorithm. </p>
         	<div class = 'wrapper' id = 'geoMapGoesHere' > </div>
@@ -100,17 +100,17 @@
 			    .attr("height", h );
 
 
-        	d3.json("boroughs.geojson", function(json) {
+        	d3.json("../dataset/boroughs.geojson", function(json) {
        			geoMap.selectAll("path")
 		           .data(json.features)
 		           .enter()
 		           .append("path")
 		           .attr("d", path);
 
-		        d3.csv('NOISE.csv', function(d){
+		        d3.csv('../dataset/NOISE.csv', function(d){
 			   		for (var i = 0; i < d.length; i++) {
 			   			crimes.push([Number(d[i]['lat']), Number(d[i]['lon'])])
-			   		} 
+			   		}
 
 			   		geoMap.selectAll('.crimes')
 				    	.data(crimes)
@@ -130,7 +130,7 @@
 				    d3.csv('RODENT.csv', function(d){
 				   		for (var i = 0; i < d.length; i++) {
 				   			crimes.push([Number(d[i]['lat']), Number(d[i]['lon'])])
-				   		} 
+				   		}
 
 				   		geoMap.selectAll('.crimes')
 					    	.data(crimes)
@@ -150,7 +150,7 @@
 				   		d3.csv('STREETCONDITION.csv', function(d){
 					   		for (var i = 0; i < d.length; i++) {
 					   			crimes.push([Number(d[i]['lat']), Number(d[i]['lon'])])
-					   		} 
+					   		}
 
 					   		geoMap.selectAll('.crimes')
 						    	.data(crimes)
@@ -182,7 +182,7 @@
 		    //        .enter()
 		    //        .append("path")
 		    //        .attr("d", path);
-		           
+
       //  		    d3.csv('prostituteClustering.csv', function(d){
 			   // 		for (var i = 0; i < d.length; i++) {
 			   // 			if (Number(d[i]['2']) == -1 || Number(d[i]['2']) >= 10) break;
@@ -295,9 +295,9 @@
 				  //   geoMap.append('text')
 				  //   	.attr('x', 300)
 				  //   	.attr('y', 100)
-				  //       .attr("text-anchor", "middle")  
-				  //       .style("font-size", "20px") 
-				  //       .style("text-decoration", "underline")  
+				  //       .attr("text-anchor", "middle")
+				  //       .style("font-size", "20px")
+				  //       .style("text-decoration", "underline")
 				  //   	.text(function(){
 				  //   		return 'K = ' + k;
 				  //   	})
@@ -349,8 +349,8 @@
 		<p> The size of data matters since every time we change K, we have to process the data.</p>
 	</div>
 
-      <footer class="site-footer">        
+      <footer class="site-footer">
       </footer>
-    </section>  
+    </section>
   </body>
 </html>
