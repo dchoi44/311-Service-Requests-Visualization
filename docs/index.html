@@ -126,48 +126,6 @@
 				    	.attr('class', 'crimes')
 				    	.style('opacity', 0.2)
 				    	.style('fill', 'yellow');
-
-				    d3.csv('RODENT.csv', function(d){
-				   		for (var i = 0; i < d.length; i++) {
-				   			crimes.push([Number(d[i]['lat']), Number(d[i]['lon'])])
-				   		}
-
-				   		geoMap.selectAll('.crimes')
-					    	.data(crimes)
-					    	.enter()
-					    	.append('circle')
-					    	.attr('cx', function(d){
-					    		return projection([d[1], d[0]])[0];
-					    	})
-					    	.attr('cy', function(d){
-					    		return projection([d[1], d[0]])[1];
-					    	})
-					    	.attr('r', 1)
-					    	.attr('class', 'crimes')
-					    	.style('opacity', 0.2)
-					    	.style('fill', 'skyblue');
-
-				   		d3.csv('STREETCONDITION.csv', function(d){
-					   		for (var i = 0; i < d.length; i++) {
-					   			crimes.push([Number(d[i]['lat']), Number(d[i]['lon'])])
-					   		}
-
-					   		geoMap.selectAll('.crimes')
-						    	.data(crimes)
-						    	.enter()
-						    	.append('circle')
-						    	.attr('cx', function(d){
-						    		return projection([d[1], d[0]])[0];
-						    	})
-						    	.attr('cy', function(d){
-						    		return projection([d[1], d[0]])[1];
-						    	})
-						    	.attr('r', 1)
-						    	.attr('class', 'crimes')
-						    	.style('opacity', 0.2)
-						    	.style('fill', 'green');
-				   		});
-				   	});
 			   	});
 		    });
 
