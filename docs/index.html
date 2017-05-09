@@ -1,2 +1,1080 @@
 <!DOCTYPE html>
 <html lang="en-us">
+<head>
+  <meta charset="UTF-8">
+  <title>Project B</title>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script type="text/javascript" src="three/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
+  <style type="text/css">
+    p {
+      font-size: 15px;
+      font-family: Helvetica, Arial, sans-serif;
+    }
+
+    text.label:hover {
+      fill: black;
+      font-size: 20px;
+      font-weight: bold;
+      hoverknn();
+    }
+    
+    g.legendOrdinal {
+      font-family: 'Ubuntu', sans-serif;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    
+    path.swatch {
+      stroke: black;
+      stroke-width: 1px;
+    }
+
+    path.stream:hover {
+      stroke: yellow;
+      fill: orange;
+      stroke-width: 3px;
+      opacity: 1;
+    }
+    .tooltip {
+      position: absolute;
+      text-align: left;
+      width: 120px;
+      height: 40px;
+      padding: 8px;
+      margin-top: -20px;
+      font: 15px 'Ubuntu';
+      font-weight:bold;
+      background: none;
+      pointer-events: none;
+      text-shadow:
+        -1px -1px 0 #FFF,  
+        1px -1px 0 #FFF,
+        -1px  1px 0 #FFF,
+        1px  1px 0 #FFF;
+    }
+    .wrapper {
+      text-align: center;
+    }
+    .radioButtons{
+      position: relative;
+      top: 200px;
+      left: 25%;
+      text-align:left;
+      height: auto;
+      width: 500px;
+      font-family: 'Ubuntu';
+      font-weight: bold;
+    }
+    .radioButtons2{
+      position: relative;
+      top: 200px;
+      left: 35%;
+      text-align:left;
+      height: auto;
+      width: 500px;
+      font-family: 'Ubuntu';
+      font-weight: bold;
+    }    
+    .button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <section class="page-header">
+    <h1 class="project-name">Project B</h1>
+    <h2 class="project-tagline"></h2>
+    <a href="https://github.com/dchoi44/311-Service-Requests-Visualization" class="btn">View on Github</a>
+  </section>
+
+  <section class="main-content">
+    <div class='wrapper' id='nyczipmap'> </div>
+    <div class='wrapper' id='streamGraphHere'></div>  
+    <div class='wrapper' id='knnHere'> </div>
+    <div class='wrapper' id='boxplot'>
+      <img src='dataset/cross_validation.png'>
+    </div>
+<!---------- Clustering START ---------->
+    <div class='wrapper' id='geoMapGoesHere'>
+      <div class="radioButtons2" width="auto" align='middle'>
+        <form action="">
+          <input type="radio" name="radioCluster" class="rc" value="Noise - Residential"> Noise - Residential <br>
+          <input type="radio" name="radioCluster" class="rc" value="Illegal Parking"> Illegal Parking <br>
+          <input type="radio" name="radioCluster" class="rc" value="Unsanitary Condition"> Unsanitary Condition <br>
+          <input type="radio" name="radioCluster" class="rc" value="Homeless Person Assistance"> Homeless Person Assistance <br>
+          <input type="radio" name="radioCluster" class="rc" value="Rodent"> Rodent
+        </form>
+      </div>
+
+    <h1>Clustering</h1>
+    <script type="text/javascript">
+      var w = 1000;
+      var h = 600;
+      var k = 2;
+      var kprv = 2;
+
+      var color = 'skyblue';
+      var complaints = [];
+
+      var projection = d3.geoMercator()
+        .center([-73.94, 40.70])
+        .translate([w / 2, h / 2])
+        .scale([60000]);
+
+      var path = d3.geoPath()
+        .projection(projection);
+
+      var geoMap = d3.select('#geoMapGoesHere')
+        .append('svg')
+        .attr("width", w)
+        .attr("height", h);
+
+        
+      var complaints = [];
+      var clusters = [[]];
+      var nCluster = 2;
+      var j = 1;
+      var colorMapping = {};
+      
+      colorMapping[0] = 'purple';
+      colorMapping[1] = 'green';
+      colorMapping[2] = 'red';
+      colorMapping[3] = 'blue';
+      colorMapping[4] = 'skyblue';
+      colorMapping[5] = 'orange';
+      
+      d3.json("dataset/NYCZip.geojson", function(json) {
+        geoMap.selectAll("path")
+        .data(json.features)
+        .enter()
+        .append("path")
+        .attr("d", path);
+      
+      //Changing dataset START
+      
+      d3.selectAll("input[name='radioCluster']").on("change", function(){
+        geoMap.selectAll('.centroids')
+          .remove()
+        geoMap.selectAll('.complaints')
+          .remove()
+        
+        selectedDataset = this.value
+        console.log(selectedDataset)
+              
+      
+      d3.csv('dataset/'+ selectedDataset +'_Clustering.csv', function(d){
+        for (var i = 0; i < d.length; i++) {
+          if (Number(d[i]['2']) == -1 || Number(d[i]['2']) >= 10) break;
+          complaints.push([Number(d[i]['lat']), Number(d[i]['lon']), Number(d[i]['2']), Number(d[i]['3']), Number(d[i]['4']), Number(d[i]['5']), Number(d[i]['6'])])
+        }
+        for ( ; i < d.length; i++){
+          if (j > nCluster){
+            nCluster += 1;
+            if (nCluster == 7){
+              break;
+            }
+            clusters.push([]);
+            j = 1;
+          }
+          clusters[clusters.length - 1].push([d[i]['lat'], d[i]['lon'], nCluster, j]);
+          j += 1
+        }
+         
+         
+         geoMap.selectAll('.complaints')
+        .data(complaints)
+        .enter()
+        .append('circle')
+        .attr('cx', function(d){
+          return projection([d[1], d[0]])[0];
+        })
+        .attr('cy', function(d){
+          return projection([d[1], d[0]])[1];
+        })
+        .attr('r', 3)
+        .attr('class', 'complaints')
+        .style('opacity', 0.5)
+        .style('fill', function(d){
+          return colorMapping[d[k]];
+        });
+                   
+        geoMap.selectAll('.centroids')
+        .data(clusters[k-2])
+        .enter()
+        .append('circle')
+        .attr('cx', function(d){
+          return projection([d[1], d[0]])[0];
+        })
+        .attr('cy', function(d){
+          return projection([d[1], d[0]])[1];
+        })
+        .attr('r', 15)
+        .attr('class', 'centroids')
+        .style('stroke-width', 4)
+        .style('stroke', 'white')
+        .style('fill', 'none');
+                   
+        d3.select('#k2')
+        .on('mouseover', function(){
+          kprv = k;
+          k = 2;
+          update();
+        })
+        .on('mouseout', function(){
+        k = kprv;
+        update();
+        })
+        .on('click', function(){
+          k = 2;
+          kprv = 2;
+          update();
+        });
+        d3.select('#k3')
+        .on('mouseover', function(){
+          kprv = k;
+          k = 3;
+          update();
+        })
+        .on('mouseout', function(){
+          k = kprv;
+          update();
+        })
+        .on('click', function(){
+          k = 3;
+          kprv = 3;
+          update();
+        });
+        d3.select('#k4')
+        .on('mouseover', function(){
+          kprv = k;
+          k = 4;
+          update();
+        })
+        .on('mouseout', function(){
+          k = kprv;
+          update();
+        })
+        .on('click', function(){
+          k = 4;
+          kprv = 4;
+          update();
+        });
+        d3.select('#k5')
+        .on('mouseover', function(){
+          kprv = k;
+          k = 5;
+          update();
+        })
+        .on('mouseout', function(){
+          k = kprv;
+          update();
+        })
+        .on('click', function(){
+          k = 5;
+          kprv = 5;
+          update();
+        });
+        d3.select('#k6')
+        .on('mouseover', function(){
+          kprv = k;
+          k = 6;
+          update();
+        })
+        .on('mouseout', function(){
+          k = kprv;
+          update();
+        })
+        .on('click', function(){
+          k = 6;
+          kprv = 6;
+          update();
+        });
+        geoMap.append('text')
+        .attr('x', 300)
+        .attr('y', 230)
+        .attr("text-anchor", "middle")  
+        .style("font-size", "20px") 
+        .style("font-weight", 'bold')
+        .style('font-family', 'Ubuntu')  
+        .text(function(){
+          return 'K = ' + k;
+        })
+        .attr('class', 'ktitle');
+                   
+        function update(){
+          geoMap.selectAll('.complaints')
+          .data(complaints)
+          .style('fill', function(d){
+            return colorMapping[d[k]];
+          });
+          geoMap.selectAll('.centroids')
+          .remove()
+          geoMap.selectAll('.centroids')
+          .data(clusters[k-2])
+          .enter()
+          .append('circle')
+          .attr('cx', function(d){
+            return projection([d[1], d[0]])[0];
+          })
+          .attr('cy', function(d){
+            return projection([d[1], d[0]])[1];
+          })
+          .attr('r', 15)
+          .attr('class', 'centroids')
+          .style('stroke-width', 4)
+          .style('stroke', 'white')
+          .style('fill', 'none');
+          geoMap.select('.ktitle')
+          .text(function(){
+            return 'K = ' + k;
+          })
+        }
+      });
+      });
+    });
+      </script>
+    <div class='wrapper' id='buttons'>
+      <input type="button" class="button" value="K = 2" id='k2'>
+      <input type="button" class="button" value="K = 3" id='k3'>
+      <input type="button" class="button" value="K = 4" id='k4'>
+      <input type="button" class="button" value="K = 5" id='k5'>
+      <input type="button" class="button" value="K = 6" id='k6'>
+    </div>
+    <p>
+    !Disclaimer! Due to programming issues to change between datasets, you need to refresh(F5) before you select the next dataset !Disclaimer!<br> 
+    Above is the map of New York on the left side of the map, it's possible to select which dataset you want to see visualized and below the map you can choose how many clusters you want to divide the data into. <br>
+    The type of clustering we used above is <b>K</b>-means, and by using clustering we are able to find a structure in the data only by analyzing the otherwise unstructured data. The white rings are located at the center of the clusters and as we increase the number of clusters we can see the circles increase in precession. 
+    </p>
+  </div>
+<!---------- Clustering END ---------->
+
+<!---------- Multiple regression START ---------->
+  <div class="radioButtons" >
+    <form action="">
+      <input type="radio" name="radioRegression" value="Noise - Residential" checked> Noise - Residential <br>
+      <input type="radio" name="radioRegression" value="Illegal Parking"> Illegal Parking <br>
+      <input type="radio" name="radioRegression" value="Unsanitary Condition"> Unsanitary Condition <br>
+      <input type="radio" name="radioRegression" value="Homeless Person Assistance"> Homeless Person Assistance <br>
+      <input type="radio" name="radioRegression" value="Rodent"> Rodent
+    </form>
+  </div>
+  <div class="wrapper" id="3dPlotGoesHere">
+    <h1>Multiple Regression</h1>
+    <script type="text/javascript">
+    // 3D Scatter Plot
+    function createTextCanvas(text, color, font, size) {
+        size = size || 16;
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        var fontStr = (size + 'px ') + (font || 'Arial');
+        ctx.font = fontStr;
+        var w = ctx.measureText(text).width;
+        var h = Math.ceil(size);
+        canvas.width = w;
+        canvas.height = h;
+        ctx.font = fontStr;
+        ctx.fillStyle = color || 'black';
+        ctx.fillText(text, 0, Math.ceil(size * 0.8));
+        return canvas;
+    }
+
+    function createText2D(text, color, font, size, segW, segH) {
+        var canvas = createTextCanvas(text, color, font, size);
+        var plane = new THREE.PlaneGeometry(canvas.width, canvas.height, segW, segH);
+        var tex = new THREE.Texture(canvas);
+        tex.needsUpdate = true;
+        var planeMat = new THREE.MeshBasicMaterial({
+            map: tex,
+            color: 0xffffff,
+            transparent: true
+        });
+        var mesh = new THREE.Mesh(plane, planeMat);
+        mesh.scale.set(0.5, 0.5, 0.5);
+        mesh.doubleSided = true;
+        return mesh;
+    }
+
+    // from http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+    function hexToRgb(hex) { //TODO rewrite with vector output
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    var renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
+    var w = 1000;
+    var h = 540;
+    renderer.setSize(w, h);
+  
+    document.getElementById("3dPlotGoesHere").appendChild(renderer.domElement);
+
+    renderer.setClearColor(0xffffff, 1);
+
+    var camera = new THREE.PerspectiveCamera(45, w / h, 1, 10000);
+    camera.position.z = 200;
+    camera.position.x = -100;
+    camera.position.y = 100;
+
+    var scene = new THREE.Scene();
+
+    var scatterPlot = new THREE.Object3D();
+    scene.add(scatterPlot);
+
+    scatterPlot.rotation.y = 0;
+
+    function v(x, y, z) {
+        return new THREE.Vector3(x, y, z);
+    }
+
+    var unfiltered = [];
+
+    var format = d3.format("+.3f");
+
+  //Changing dataset START
+  var selectedDatasetRegression = d3.select('input[name=radioRegression]:checked').attr('value')
+    console.log(selectedDatasetRegression)
+    makeMultipleRegression(selectedDatasetRegression)
+
+  d3.selectAll("input[name='radioRegression']").on("change", function(){
+    var selectedDatasetRegression = this.value
+    makeMultipleRegression(selectedDatasetRegression)
+    });
+  
+  function makeMultipleRegression(name){
+    var data = d3.csv("dataset/"+name+"_XYZ.csv", function (d) {
+      d.forEach(function (d,i) {
+      unfiltered[i] = {
+        x: +d.X,
+        y: +d.Y,
+        z: +d.Z
+      }
+    })
+  
+      var xExent = d3.extent(unfiltered, function (d) {return d.x; }),
+        yExent = d3.extent(unfiltered, function (d) {return d.y; }),
+        zExent = d3.extent(unfiltered, function (d) {return d.z; });
+    
+      var vpts = {
+        xMax: xExent[1],
+        xCen: (xExent[1] + xExent[0]) / 2,
+        xMin: xExent[0],
+        yMax: yExent[1],
+        yCen: (yExent[1] + yExent[0]) / 2,
+        yMin: yExent[0],
+        zMax: zExent[1],
+        zCen: (zExent[1] + zExent[0]) / 2,
+        zMin: zExent[0]
+      }
+    
+      var colour = d3.scaleOrdinal(d3.schemeCategory20c);
+    
+      var xScale = d3.scaleLinear()
+            .domain(xExent)
+            .range([-50,50]);
+      var yScale = d3.scaleLinear()
+            .domain(yExent)
+            .range([-50,50]);                  
+      var zScale = d3.scaleLinear()
+            .domain(zExent)
+            .range([-50,50]);
+    
+      var lineGeo = new THREE.Geometry();
+      lineGeo.vertices.push(
+        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zCen)),
+        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zCen)),
+        v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMin)),
+    
+        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)),
+        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
+    
+        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMax)),
+        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMin)),
+        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zCen)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zCen)),
+    
+        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)),
+        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)),
+    
+        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMax)),
+        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)),
+        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zCen)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zCen)),
+    
+        v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
+        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
+        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)),
+    
+        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMax)),
+        v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMax)),
+        v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)),
+        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax))
+    
+      );
+      var lineMat = new THREE.LineBasicMaterial({
+        color: 0xdcdcdc,
+        lineWidth: 2
+      });
+      var line = new THREE.Line(lineGeo, lineMat);
+      line.type = THREE.Lines;
+      scatterPlot.add(line);
+    
+      var titleX = createText2D('Time');
+      titleX.position.x = xScale(vpts.xMin) - 12,
+      titleX.position.y = 5;
+      scatterPlot.add(titleX);
+    
+      var valueX = createText2D(0);
+      valueX.position.x = xScale(vpts.xMin) - 12,
+      valueX.position.y = -5;
+      scatterPlot.add(valueX);
+    
+      var titleX = createText2D('Time');
+      titleX.position.x = xScale(vpts.xMax) + 12;
+      titleX.position.y = 5;
+      scatterPlot.add(titleX);
+    
+      var valueX = createText2D(24);
+      valueX.position.x = xScale(vpts.xMax) + 12,
+      valueX.position.y = -5;
+      scatterPlot.add(valueX);
+    
+      var titleY = createText2D('Total amount of complaints');
+      titleY.position.y = yScale(vpts.yMin) - 5;
+      scatterPlot.add(titleY);
+    
+      var valueY = createText2D(0);
+      valueY.position.y = yScale(vpts.yMin) - 15,
+      scatterPlot.add(valueY);
+    
+      var titleY = createText2D('Total amount of complaints');
+      titleY.position.y = yScale(vpts.yMax) + 15;
+      scatterPlot.add(titleY);
+    
+      var valueY = createText2D(869);
+      valueY.position.y = yScale(vpts.yMax) + 5,
+      scatterPlot.add(valueY);
+    
+      var titleZ = createText2D('Amount of '+selectedDatasetRegression+' complaints ');
+      titleZ.position.z = zScale(vpts.zMax) + 2;
+      scatterPlot.add(titleZ);
+      
+      var valueZ = createText2D(format(zExent[1]));
+      valueZ.position.z = zScale(vpts.zMax) + 2,
+      valueZ.position.y = zScale(vpts.zMax) - 60,
+      scatterPlot.add(valueZ);
+    
+      var mat = new THREE.ParticleBasicMaterial({
+        vertexColors: true,
+        size: 5
+      });
+      
+      var pointCount = unfiltered.length;
+      var pointGeo = new THREE.Geometry();
+      for (var i = 0; i < pointCount; i ++) {
+        var x = xScale(unfiltered[i].x);
+        var y = yScale(unfiltered[i].y);
+        var z = zScale(unfiltered[i].z);
+    
+        pointGeo.vertices.push(new THREE.Vector3(x, y, z));
+        pointGeo.colors.push(new THREE.Color().setRGB(
+        hexToRgb(colour(i)).r / 255, hexToRgb(colour(i)).g / 255, hexToRgb(colour(i)).b / 255 
+        ));
+    
+      }
+      var points = new THREE.Points(pointGeo, mat);
+      scatterPlot.add(points);
+    
+      renderer.render(scene, camera);
+      var paused = false;
+      var last = new Date().getTime();
+      var down = false;
+      var sx = 0,
+        sy = 0;
+        
+      window.onmousedown = function(ev) {
+        down = true;
+        sx = ev.clientX;
+        sy = ev.clientY;
+      };
+      window.onmouseup = function() {
+        down = false;
+      };
+      window.onmousemove = function(ev) {
+        if (down) {
+          var dx = ev.clientX - sx;
+          var dy = ev.clientY - sy;
+          scatterPlot.rotation.y += dx * 0.01;
+          camera.position.y += dy;
+          sx += dx;
+          sy += dy;
+        }
+      }
+      var animating = false;
+      window.ondblclick = function() {
+        animating = !animating;
+      };
+    
+      function animate(t) {
+        if (!paused) {
+          last = t;
+          if (animating) {
+            var v = pointGeo.vertices;
+            for (var i = 0; i < v.length; i++) {
+              var u = v[i];
+              console.log(u)
+              u.angle += u.speed * 0.01;
+              u.x = Math.cos(u.angle) * u.radius;
+              u.z = Math.sin(u.angle) * u.radius;
+            }
+            pointGeo.__dirtyVertices = true;
+          }
+          renderer.clear();
+          camera.lookAt(scene.position);
+          renderer.render(scene, camera);
+        }
+        window.requestAnimationFrame(animate, renderer.domElement);
+      };
+      animate(new Date().getTime());
+      onmessage = function(ev) {
+        paused = (ev.data == 'pause');
+      };
+    })
+  }
+    </script>
+    <p>
+    !Disclaimer! We had some programming problems, to change this graph you should use the bullet points and then refresh the webpage(F5) !Disclaimer!<br>
+    
+    The interactive 3D-graph above is a visualization of a multiple regression analysis, it’s possible to change which dataset you want visualized by using the radio buttons on the left, the colors doesn’t mean anything they are different simply so it’s easier to tell the difference between each point. <br>
+    Multiple regression, is used when you have more than one covariant to predict from, we use a part of our data to fit our model to help it predict the rest of our data. 
+    </p>
+  </div>
+
+<!---------- Multiple regression END ---------->
+
+    <footer class="site-footer">
+    </footer>
+  </section>
+  <script type="text/javascript">
+    function cloneSelection(appendTo, toCopy, times) {
+      toCopy.each(function() {
+        for (var i = 0; i < times; i++) {
+          var clone = appendTo.node().appendChild(this.cloneNode(true));
+          d3.select(clone).attr("class", "clone");
+        }
+      });
+      return appendTo.selectAll('.clone');
+    }
+    var w = 1000;
+    var h = 600;
+
+    var myColorScheme = d3.schemeYlGnBu[9];
+    var myColorSchemeLn = d3.interpolateYlGnBu;
+
+    var cplnts = [];
+
+    var projection = d3.geoMercator()
+      .center([-73.94, 40.70])
+      .translate([w / 2, h / 2])
+      .scale([60000]);
+
+    var path = d3.geoPath()
+      .projection(projection);
+
+    var knnMap = d3.select('#knnHere')
+      .append('svg')
+      .attr("width", w)
+      .attr("height", h);
+
+    var mapgroup = knnMap.append('g')
+      .attr('class', 'map')
+
+    d3.json("dataset/NYCZip.geojson", function(json) {
+
+      knnMap.selectAll(".map")
+        .selectAll('path')
+        .data(json.features)
+        .enter()
+        .append("path")
+        .attr("d", path)
+        .attr('fill', 'white')
+        .attr('zc', function(d){
+          return d.properties.postalCode;
+        });
+
+      var complaintList = ['Noise - Residential', 'Illegal Parking', 'UNSANITARY CONDITION', 'Homeless Person Assistance', 'Rodent'];   
+      d3.csv('dataset/knnGridResult.csv', function(d) {
+        for (var i = 0; i < d.length; i++) {
+          cplnts.push([Number(d[i]['lat']), Number(d[i]['lon']), Number(d[i]['cat'])])
+        }
+        knnMap.append('g')
+          .attr('class', 'dots')
+
+        knnMap.selectAll('.dots')
+          .selectAll('.dot')
+          .data(cplnts)
+          .enter()
+          .append('rect')
+          .attr('x', function(d) {
+            return projection([d[1], d[0]])[0] - 3;
+          })
+          .attr('y', function(d) {
+            return projection([d[1], d[0]])[1] - 3;
+          })
+          .attr('height',6)
+          .attr('width', 6)
+          .attr('rx', 2)
+          .attr('ry', 2)
+          .attr('class', function(d){
+            return 'dotclass' + d[2];
+          })
+          .style('opacity', 1)
+          .attr('stroke', 'skyblue')
+          .attr('stroke-width', 0.3)
+          .style('fill', function(d){
+            return myColorScheme[d[2] * 2];
+          });
+      });
+
+      var ordinal = d3.scaleOrdinal()
+        .domain(complaintList)
+        .range([myColorScheme[0],myColorScheme[2],myColorScheme[4],myColorScheme[6],myColorScheme[8]]);
+
+      knnMap.append("g")
+        .attr('class', 'legendOrdinal')
+        .attr('transform', 'translate(180,60)');
+
+      var legendOrdinal = d3.legendColor()
+        .shape('path', d3.symbol().type(d3.symbolSquare).size(150)())
+        .shapePadding(10)
+        .scale(ordinal);
+
+      knnMap.select('.legendOrdinal')
+        .call(legendOrdinal);
+
+      knnMap.selectAll('.cell')
+        .on("mouseover", hoverinknn)
+        .on("mouseout", hoveroutknn);
+
+      function hoverinknn(d){
+        Ndata = complaintList.indexOf(d);
+        knnMap.select('.dots')
+          .selectAll('rect')
+          .transition()
+          .duration(100)
+          .style('fill', function(d){
+            if (d[2] == Ndata){
+              return myColorScheme[7];
+            } else {
+              return 'grey';
+            }
+          })
+          .attr('height', function(d){
+            if (d[2] == Ndata){
+              return 8;
+            } else {
+              return 6;
+            }
+          })
+          .attr('width', function(d){
+            if (d[2] == Ndata){
+              return 8;
+            } else {
+              return 6;
+            }
+          });
+      }
+
+      function hoveroutknn(d){
+        Ndata = complaintList.indexOf(d);
+        knnMap.select('.dots')
+          .selectAll('rect')
+          .transition()
+          .duration(100)
+          .style('fill', function(d){
+            return myColorScheme[d[2] * 2];
+          })
+          .attr('height', 6)
+          .attr('width', 6);
+      }
+
+      d3.csv('dataset/complaints_ZC.csv', function(d){
+        stat = {};  
+        for (var i = 0; i < d.length; i++) {
+          stat[d[i]['ZC']] = Number(d[i][' number'])
+        }
+
+        var nyczipmap = d3.select('#nyczipmap')
+          .append('svg')
+          .attr('height', h)
+          .attr('width', w)
+
+        var cloned = cloneSelection(nyczipmap, mapgroup, 1);
+
+        cloned.selectAll('path')
+          .transition()
+          .duration(2500)
+          .attr('fill', function(){
+            zc = this.attributes.zc.value;
+            if (zc in stat == true){
+              return myColorScheme[stat[zc]];
+            }
+            else{
+              return myColorScheme[0];
+            }})
+          .attr('orifill', function(){
+            zc = this.attributes.zc.value;
+            if (zc in stat == true){
+              return myColorScheme[stat[zc]];
+            }
+            else{
+              return myColorScheme[0];
+            }})
+          .attr('stroke', 'black')
+          .attr('stroke-width', '0.4')
+          .attr('class', function(){
+            return 'mapfrag' + this.attributes.zc.value;
+          })
+
+        cloned.selectAll('path')
+          .on("mouseover", hoverinZC)
+          .on("mousemove", moveZC)
+          .on("mouseout", hoveroutZC);
+
+        function hoverinZC(d){
+          var zc = this.attributes.zc.value;
+          cloned.select('.mapfrag' + zc)
+            .attr('stroke', 'skyblue')
+            .attr('stroke-width', 3)
+            .attr('fill', 'black');
+          tt1.style("display", "inline");
+        }
+
+        function hoveroutZC(d){
+          var zc = this.attributes.zc.value;
+          cloned.select('.mapfrag' + zc)
+            .attr('fill', this.attributes.orifill.value)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 0.4);
+          tt1.style('display', 'none');
+        }
+
+        function moveZC(d){
+          var zc = this.attributes.zc.value;
+          tt1.text(zc)
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 18) + "px");
+        }
+
+        var color = d3.scaleThreshold()
+          .domain(d3.range(0,8))
+          .range(myColorScheme);
+
+        var x = d3.scaleLinear()
+          .domain([-1, 8])
+          .rangeRound([600, 860]);
+
+        var g = nyczipmap.append("g")
+          .attr("class", "key")
+          .attr("transform", "translate(-400,80)");
+
+        g.selectAll("rect")
+          .data(color.range().map(function(d) {
+              d = color.invertExtent(d);
+              if (d[0] == null) d[0] = x.domain()[0];
+              if (d[1] == null) d[1] = x.domain()[1];
+              return d;
+            }))
+          .enter().append("rect")
+            .attr("height", 8)
+            .attr("x", function(d) { return x(d[0]); })
+            .attr("width", function(d) { return x(d[1]) - x(d[0]); })
+            .attr("fill", function(d) { return color(d[0]); });
+
+        g.append("text")
+            .attr("class", "caption")
+            .attr("x", x.range()[0])
+            .attr("y", -6)
+            .attr("fill", "#000")
+            .attr("text-anchor", "start")
+            .attr("font-weight", "bold")
+            .text("Number of Complaints")
+            .attr('font-family', 'Ubuntu');
+
+        g.append('text')
+            .attr('x', x.range()[0])
+            .attr('y', 20)
+            .attr('font-family', 'Ubuntu')
+            .attr('font-size', 10)
+            .text('LOW 0~');
+
+        g.append('text')
+            .attr('x', x.range()[1])
+            .attr('y', 20)
+            .attr('text-anchor', 'end')
+            .attr('font-family', 'Ubuntu')
+            .attr('font-size', 10)
+            .text('~37000 HIGH');
+
+        var tt1 = d3.select("body").append("div")
+          .attr("class", "tooltip")
+          .style("display", "none");
+      });
+    });
+
+    d3.csv('dataset/streamGraph.csv', function(d){
+      var n = 20, // number of layers
+          header = d3.keys(d[0]),
+          dataset = {};
+      for (var i = 0; i < header.length; i++) {
+        dataset[header[i]] = [];
+      }
+      for (var i = 0; i < d.length; i++) {
+        for (var j = 0; j < header.length; j++) {
+          dataset[header[j]].push(d[i][header[j]])
+        }
+      }
+      var m = dataset[header[0]].length;
+
+      var stack = d3.stack().keys(d3.range(n)).offset(d3.stackOffsetWiggle),
+          layers0 = stack(d3.transpose(d3.range(n).map(function(d) { return dataset[header[d]]; }))),
+          layers1 = stack(d3.transpose(d3.range(n).map(function(d) { return dataset[header[d]]; }))),
+          layers = layers0.concat(layers1);
+
+      var streamGraph = d3.select("#streamGraphHere").append('svg');
+      streamGraph.attr('height', h).attr('width', w);
+      var width = +streamGraph.attr("width"),
+          height = +streamGraph.attr("height");
+
+      var x = d3.scaleLinear()
+          .domain([0, m - 1])
+          .range([0, width]);
+
+      var y = d3.scaleLinear()
+          .domain([d3.min(layers, stackMin), d3.max(layers, stackMax)])
+          .range([height - 40, 0]);
+
+      var z = myColorSchemeLn;
+
+      var area = d3.area()
+          .x(function(d, i) { return x(i); })
+          .y0(function(d) { return y(d[0]); })
+          .y1(function(d) { return y(d[1]); });
+
+      streamGraph.append('g')
+        .attr('class', 'helplines')
+        .selectAll('#helpline')
+        .data(d3.range(9))
+        .enter()
+        .append('path')
+        .attr('class', 'helpline')
+        .attr('d', function(d){
+          var xv = x(d * 6)
+          if (xv == 0){
+            xv += 1;
+          } else if (xv == width){
+            xv -= 1;
+          }
+          var yv = y(layers0[layers0.length - 1][d * 6][1])
+          var yv2 = y(layers0[0][d * 6][0])
+          return 'M ' + xv + ' ' + yv2 + '\n' + 
+                 'L ' + xv + ' ' + yv
+        })
+        .attr('stroke', 'black')
+        .attr('stroke-width', '2');
+
+      streamGraph.append('g')
+        .attr('class', 'hllabels')
+        .selectAll('#hllabel')
+        .data(d3.range(5))
+        .enter()
+        .append('text')
+        .attr('class', 'hllabel')
+        .text(function(d){
+          return ['00:00', '06:00', '12:00', '18:00', '24:00'][d];
+        })
+        .attr('x', function(d){
+          if(d == 0){
+            return 30;
+          } else if (d == 4){
+            return width - 30;
+          } return x(d * 12);
+        })
+        .attr('y', height - 20)
+        .attr('font-size', 25)
+        .attr('font-weight', 'bold')
+        .attr('text-align', 'center')
+        .attr('text-anchor', 'middle')
+        .attr('font-family', 'Ubuntu')
+        .attr('background', 'blue');
+
+      var tt = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("display", "none");
+
+      streamGraph.append('g')
+        .attr('class', 'streams')
+        .selectAll("#stream")
+        .data(layers0)
+        .enter().append("path")
+          .attr("d", area)
+          .attr("fill", function(d) { 
+            return z(Math.random()); })
+          .attr('opacity', '0.8')
+          .attr('stroke', 'black')
+          .attr('stroke-width', '0.5')
+          .attr('class', 'stream')
+          .attr('CT', function(d) {
+            return header[d.key];
+          })
+          .on("mouseover", function() {tt.style("display", "inline")})
+          .on("mousemove", mousemovestream)
+          .on("mouseout", function() {tt.style('display', 'none')});
+
+      function mousemovestream(data){
+        kwd = header[data.key]
+        idx = parseInt(x.invert(d3.event.pageX))
+        tt.text(kwd + ': ' + dataset[kwd][idx]+' Complaints')
+          .style("left", (d3.event.pageX + 10) + "px")
+          .style("top", (d3.event.pageY - 18) + "px");
+      }
+
+      function stackMax(layer) {
+        return d3.max(layer, function(d) { return d[1]; });
+      }
+
+      function stackMin(layer) {
+        return d3.min(layer, function(d) { return d[0]; });
+      }
+
+      function transition() {
+        var t;
+        d3.selectAll("path")
+          .data((t = layers1, layers1 = layers0, layers0 = t))
+          .transition()
+            .duration(2500)
+            .attr("d", area);
+      }
+    });
+  </script>
+</body>
