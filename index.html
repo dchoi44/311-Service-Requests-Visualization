@@ -191,7 +191,7 @@
                 console.log(selectedDataset)
 
 
-              d3.csv('dataset/'+ selectedDataset +'_Clustering.csv', function(d){
+              d3.csv('docs/dataset/'+ selectedDataset +'_Clustering.csv', function(d){
                 for (var i = 0; i < d.length; i++) {
                   if (Number(d[i]['2']) == -1 || Number(d[i]['2']) >= 10) break;
                   complaints.push([Number(d[i]['lat']), Number(d[i]['lon']), Number(d[i]['2']), Number(d[i]['3']), Number(d[i]['4']), Number(d[i]['5']), Number(d[i]['6'])])
