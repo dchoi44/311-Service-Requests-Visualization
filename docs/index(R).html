@@ -290,6 +290,7 @@
 			<input type="button" class="button" value="K = 6" id='k6'>
 		</div>
 		<p>
+		!Disclaimer! Due to programming issues to change between datasets, you need to refresh(F5) before you select the next dataset !Disclaimer!<br> 
 		Above is the map of New York on the left side of the map, it's possible to select which dataset you want to see visualized and below the map you can choose how many clusters you want to divide the data into. <br>
 		The type of clustering we used above is <b>K</b>-means, and by using clustering we are able to find a structure in the data only by analyzing the otherwise unstructured data. The white rings are located at the center of the clusters and as we increase the number of clusters we can see the circles increase in precession. 
 		</p>
@@ -384,212 +385,225 @@
 
     var format = d3.format("+.3f");
 
-    var data = d3.csv("dataset/Noise - Residential_XYZ.csv", function (d) {
-	        d.forEach(function (d,i) {
-            unfiltered[i] = {
-                x: +d.X,
-                y: +d.Y,
-                z: +d.Z
-            }
-        })
-
-    var xExent = d3.extent(unfiltered, function (d) {return d.x; }),
-        yExent = d3.extent(unfiltered, function (d) {return d.y; }),
-        zExent = d3.extent(unfiltered, function (d) {return d.z; });
-
-    var vpts = {
-        xMax: xExent[1],
-        xCen: (xExent[1] + xExent[0]) / 2,
-        xMin: xExent[0],
-        yMax: yExent[1],
-        yCen: (yExent[1] + yExent[0]) / 2,
-        yMin: yExent[0],
-        zMax: zExent[1],
-        zCen: (zExent[1] + zExent[0]) / 2,
-        zMin: zExent[0]
-    }
-
-    var colour = d3.scale.category20c();
-
-    var xScale = d3.scale.linear()
-                  .domain(xExent)
-                  .range([-50,50]);
-    var yScale = d3.scale.linear()
-                  .domain(yExent)
-                  .range([-50,50]);                  
-    var zScale = d3.scale.linear()
-                  .domain(zExent)
-                  .range([-50,50]);
-
-    var lineGeo = new THREE.Geometry();
-    lineGeo.vertices.push(
-        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zCen)),
-        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zCen)),
-        v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMin)),
-
-        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)),
-        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)),
-        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
-        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
-
-        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMax)),
-        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMin)),
-        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zCen)),
-        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zCen)),
-
-        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)),
-        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)),
-        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
-        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)),
-
-        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMax)),
-        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)),
-        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zCen)),
-        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zCen)),
-
-        v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
-        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
-        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)),
-        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)),
-
-        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMax)),
-        v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMax)),
-        v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)),
-        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax))
-
-    );
-    var lineMat = new THREE.LineBasicMaterial({
-        color: 0xdcdcdc,
-        lineWidth: 2
-    });
-    var line = new THREE.Line(lineGeo, lineMat);
-    line.type = THREE.Lines;
-    scatterPlot.add(line);
-
-    var titleX = createText2D('Time');
-    titleX.position.x = xScale(vpts.xMin) - 12,
-    titleX.position.y = 5;
-    scatterPlot.add(titleX);
-
-    var valueX = createText2D(0);
-    valueX.position.x = xScale(vpts.xMin) - 12,
-    valueX.position.y = -5;
-    scatterPlot.add(valueX);
-
-    var titleX = createText2D('Time');
-    titleX.position.x = xScale(vpts.xMax) + 12;
-    titleX.position.y = 5;
-    scatterPlot.add(titleX);
-
-    var valueX = createText2D(24);
-    valueX.position.x = xScale(vpts.xMax) + 12,
-    valueX.position.y = -5;
-    scatterPlot.add(valueX);
-
-    var titleY = createText2D('Total amount of complaints');
-    titleY.position.y = yScale(vpts.yMin) - 5;
-    scatterPlot.add(titleY);
-
-    var valueY = createText2D(0);
-    valueY.position.y = yScale(vpts.yMin) - 15,
-    scatterPlot.add(valueY);
-
-    var titleY = createText2D('Total amount of complaints');
-    titleY.position.y = yScale(vpts.yMax) + 15;
-    scatterPlot.add(titleY);
-
-    var valueY = createText2D(869);
-    valueY.position.y = yScale(vpts.yMax) + 5,
-    scatterPlot.add(valueY);
-
-    var titleZ = createText2D('Amount of Noise - Residential complaints ');
-    titleZ.position.z = zScale(vpts.zMax) + 2;
-    scatterPlot.add(titleZ);
+	//Changing dataset START
+	var selectedDatasetRegression = d3.select('input[name=radioRegression]:checked').attr('value')
+		console.log(selectedDatasetRegression)
+		makeMultipleRegression(selectedDatasetRegression)
+			
+	d3.selectAll("input[name='radioRegression']").on("change", function(){
+		selectedDatasetRegression = this.value
+		makeMultipleRegression(selectedDatasetRegression)
+		});
 	
-	var valueZ = createText2D(format(zExent[1]));
-    valueZ.position.z = zScale(vpts.zMax) + 2,
-	valueZ.position.y = zScale(vpts.zMax) - 60,
-    scatterPlot.add(valueZ);
-
-    var mat = new THREE.ParticleBasicMaterial({
-        vertexColors: true,
-        size: 5
-    });
+	function makeMultipleRegression(name){
+		var data = d3.csv("dataset/"+name+"_XYZ.csv", function (d) {
+			d.forEach(function (d,i) {
+			unfiltered[i] = {
+				x: +d.X,
+				y: +d.Y,
+				z: +d.Z
+			}
+		})
 	
-    var pointCount = unfiltered.length;
-    var pointGeo = new THREE.Geometry();
-    for (var i = 0; i < pointCount; i ++) {
-        var x = xScale(unfiltered[i].x);
-        var y = yScale(unfiltered[i].y);
-        var z = zScale(unfiltered[i].z);
-
-		pointGeo.vertices.push(new THREE.Vector3(x, y, z));
-        pointGeo.colors.push(new THREE.Color().setRGB(
-          hexToRgb(colour(i)).r / 255, hexToRgb(colour(i)).g / 255, hexToRgb(colour(i)).b / 255 
-        ));
-
-    }
-    var points = new THREE.Points(pointGeo, mat);
-    scatterPlot.add(points);
-
-    renderer.render(scene, camera);
-    var paused = false;
-    var last = new Date().getTime();
-    var down = false;
-    var sx = 0,
-        sy = 0;
-        
-    window.onmousedown = function(ev) {
-        down = true;
-        sx = ev.clientX;
-        sy = ev.clientY;
-    };
-    window.onmouseup = function() {
-        down = false;
-    };
-    window.onmousemove = function(ev) {
-        if (down) {
-            var dx = ev.clientX - sx;
-            var dy = ev.clientY - sy;
-            scatterPlot.rotation.y += dx * 0.01;
-            camera.position.y += dy;
-            sx += dx;
-            sy += dy;
-        }
-    }
-    var animating = false;
-    window.ondblclick = function() {
-        animating = !animating;
-    };
-
-    function animate(t) {
-        if (!paused) {
-            last = t;
-            if (animating) {
-                var v = pointGeo.vertices;
-                for (var i = 0; i < v.length; i++) {
-                    var u = v[i];
-                    console.log(u)
-                    u.angle += u.speed * 0.01;
-                    u.x = Math.cos(u.angle) * u.radius;
-                    u.z = Math.sin(u.angle) * u.radius;
-                }
-                pointGeo.__dirtyVertices = true;
-            }
-            renderer.clear();
-            camera.lookAt(scene.position);
-            renderer.render(scene, camera);
-        }
-        window.requestAnimationFrame(animate, renderer.domElement);
-    };
-    animate(new Date().getTime());
-    onmessage = function(ev) {
-        paused = (ev.data == 'pause');
-    };
-
-    })
+			var xExent = d3.extent(unfiltered, function (d) {return d.x; }),
+				yExent = d3.extent(unfiltered, function (d) {return d.y; }),
+				zExent = d3.extent(unfiltered, function (d) {return d.z; });
+		
+			var vpts = {
+				xMax: xExent[1],
+				xCen: (xExent[1] + xExent[0]) / 2,
+				xMin: xExent[0],
+				yMax: yExent[1],
+				yCen: (yExent[1] + yExent[0]) / 2,
+				yMin: yExent[0],
+				zMax: zExent[1],
+				zCen: (zExent[1] + zExent[0]) / 2,
+				zMin: zExent[0]
+			}
+		
+			var colour = d3.scale.category20c();
+		
+			var xScale = d3.scale.linear()
+						.domain(xExent)
+						.range([-50,50]);
+			var yScale = d3.scale.linear()
+						.domain(yExent)
+						.range([-50,50]);                  
+			var zScale = d3.scale.linear()
+						.domain(zExent)
+						.range([-50,50]);
+		
+			var lineGeo = new THREE.Geometry();
+			lineGeo.vertices.push(
+				v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zCen)),
+				v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zCen)),
+				v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMin)),
+		
+				v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)),
+				v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)),
+				v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
+				v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
+		
+				v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMax)),
+				v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMin)),
+				v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zCen)),
+				v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zCen)),
+		
+				v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)),
+				v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)),
+				v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
+				v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)),
+		
+				v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMax)),
+				v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)),
+				v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zCen)),
+				v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zCen)),
+		
+				v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
+				v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
+				v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)),
+				v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)),
+		
+				v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMax)),
+				v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMax)),
+				v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)),
+				v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax))
+		
+			);
+			var lineMat = new THREE.LineBasicMaterial({
+				color: 0xdcdcdc,
+				lineWidth: 2
+			});
+			var line = new THREE.Line(lineGeo, lineMat);
+			line.type = THREE.Lines;
+			scatterPlot.add(line);
+		
+			var titleX = createText2D('Time');
+			titleX.position.x = xScale(vpts.xMin) - 12,
+			titleX.position.y = 5;
+			scatterPlot.add(titleX);
+		
+			var valueX = createText2D(0);
+			valueX.position.x = xScale(vpts.xMin) - 12,
+			valueX.position.y = -5;
+			scatterPlot.add(valueX);
+		
+			var titleX = createText2D('Time');
+			titleX.position.x = xScale(vpts.xMax) + 12;
+			titleX.position.y = 5;
+			scatterPlot.add(titleX);
+		
+			var valueX = createText2D(24);
+			valueX.position.x = xScale(vpts.xMax) + 12,
+			valueX.position.y = -5;
+			scatterPlot.add(valueX);
+		
+			var titleY = createText2D('Total amount of complaints');
+			titleY.position.y = yScale(vpts.yMin) - 5;
+			scatterPlot.add(titleY);
+		
+			var valueY = createText2D(0);
+			valueY.position.y = yScale(vpts.yMin) - 15,
+			scatterPlot.add(valueY);
+		
+			var titleY = createText2D('Total amount of complaints');
+			titleY.position.y = yScale(vpts.yMax) + 15;
+			scatterPlot.add(titleY);
+		
+			var valueY = createText2D(869);
+			valueY.position.y = yScale(vpts.yMax) + 5,
+			scatterPlot.add(valueY);
+		
+			var titleZ = createText2D('Amount of '+selectedDatasetRegression+' complaints ');
+			titleZ.position.z = zScale(vpts.zMax) + 2;
+			scatterPlot.add(titleZ);
+			
+			var valueZ = createText2D(format(zExent[1]));
+			valueZ.position.z = zScale(vpts.zMax) + 2,
+			valueZ.position.y = zScale(vpts.zMax) - 60,
+			scatterPlot.add(valueZ);
+		
+			var mat = new THREE.ParticleBasicMaterial({
+				vertexColors: true,
+				size: 5
+			});
+			
+			var pointCount = unfiltered.length;
+			var pointGeo = new THREE.Geometry();
+			for (var i = 0; i < pointCount; i ++) {
+				var x = xScale(unfiltered[i].x);
+				var y = yScale(unfiltered[i].y);
+				var z = zScale(unfiltered[i].z);
+		
+				pointGeo.vertices.push(new THREE.Vector3(x, y, z));
+				pointGeo.colors.push(new THREE.Color().setRGB(
+				hexToRgb(colour(i)).r / 255, hexToRgb(colour(i)).g / 255, hexToRgb(colour(i)).b / 255 
+				));
+		
+			}
+			var points = new THREE.Points(pointGeo, mat);
+			scatterPlot.add(points);
+		
+			renderer.render(scene, camera);
+			var paused = false;
+			var last = new Date().getTime();
+			var down = false;
+			var sx = 0,
+				sy = 0;
+				
+			window.onmousedown = function(ev) {
+				down = true;
+				sx = ev.clientX;
+				sy = ev.clientY;
+			};
+			window.onmouseup = function() {
+				down = false;
+			};
+			window.onmousemove = function(ev) {
+				if (down) {
+					var dx = ev.clientX - sx;
+					var dy = ev.clientY - sy;
+					scatterPlot.rotation.y += dx * 0.01;
+					camera.position.y += dy;
+					sx += dx;
+					sy += dy;
+				}
+			}
+			var animating = false;
+			window.ondblclick = function() {
+				animating = !animating;
+			};
+		
+			function animate(t) {
+				if (!paused) {
+					last = t;
+					if (animating) {
+						var v = pointGeo.vertices;
+						for (var i = 0; i < v.length; i++) {
+							var u = v[i];
+							console.log(u)
+							u.angle += u.speed * 0.01;
+							u.x = Math.cos(u.angle) * u.radius;
+							u.z = Math.sin(u.angle) * u.radius;
+						}
+						pointGeo.__dirtyVertices = true;
+					}
+					renderer.clear();
+					camera.lookAt(scene.position);
+					renderer.render(scene, camera);
+				}
+				window.requestAnimationFrame(animate, renderer.domElement);
+			};
+			animate(new Date().getTime());
+			onmessage = function(ev) {
+				paused = (ev.data == 'pause');
+			};
+		})
+	}
 		</script>
 		<p>
+		!Disclaimer! We had some programming problems, to change this graph you should use the bullet points and then refresh the webpage(F5) !Disclaimer!<br>
+		
  		The interactive 3D-graph above is a visualization of a multiple regression analysis, it’s possible to change which dataset you want visualized by using the radio buttons on the left, the colors doesn’t mean anything they are different simply so it’s easier to tell the difference between each point. <br>
 		Multiple regression, is used when you have more than one covariant to predict from, we use a part of our data to fit our model to help it predict the rest of our data. 
 		</p>
