@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Project 1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <script type="text/javascript" src="d3/d3.v3.min.js"></script>
+  <script type="text/javascript" src="three/three.min.js"></script>
+
+  <style type="text/css">
+    .button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+    }
+
+    .wrapper {
+      text-align: center;
+	}
+  </style>
+</head>
+
+<body>
+  <section class="page-header">
+  </section>
+  <section class="main-content">
+  
+<!---------- Clustering START ---------->
+      <div class='wrapper' id='geoMapGoesHere'>
+		  <script type="text/javascript">
+			var w = 1000;
+			var h = 600;
+			var k = 2;
+			var kprv = 2;
+
+			var color = 'skyblue';
+			var crimes = [];
+
+			var projection = d3.geo.mercator()
+			  .center([-73.94, 40.70])
+			  .translate([w / 2, h / 2])
+			  .scale([60000]);
+
+			var path = d3.geo.path()
+			  .projection(projection);
+
+			var geoMap = d3.select('#geoMapGoesHere')
+			  .append('svg')
+			  .attr("width", w)
+			  .attr("height", h);
+
+			  
+			var crimes = [];
+			var clusters = [[]];
+			var nCluster = 2;
+			var j = 1;
+			var colorMapping = {};
+			
+			colorMapping[0] = 'purple';
+			colorMapping[1] = 'green';
+			colorMapping[2] = 'red';
+			colorMapping[3] = 'blue';
+			colorMapping[4] = 'skyblue';
+			colorMapping[5] = 'orange';
+			
+			d3.json("dataset/NYC.geojson", function(json) {
+			  geoMap.selectAll("path")
+				.data(json.features)
+				.enter()
+				.append("path")
+				.attr("d", path);
+			
+			d3.csv('dataset/Sewer_Clustering.csv', function(d){
+				for (var i = 0; i < d.length; i++) {
+					if (Number(d[i]['2']) == -1 || Number(d[i]['2']) >= 10) break;
+					crimes.push([Number(d[i]['lat']), Number(d[i]['lon']), Number(d[i]['2']), Number(d[i]['3']), Number(d[i]['4']), Number(d[i]['5']), Number(d[i]['6'])])
+				} for ( ; i < d.length; i++){
+					if (j > nCluster){
+						nCluster += 1;
+						if (nCluster == 7){
+							break;
+						}
+						clusters.push([]);
+						j = 1;
+					}
+					clusters[clusters.length - 1].push([d[i]['lat'], d[i]['lon'], nCluster, j]);
+					j += 1
+				}
+			   
+			   
+			   geoMap.selectAll('.crimes')
+							.data(crimes)
+							.enter()
+							.append('circle')
+							.attr('cx', function(d){
+								return projection([d[1], d[0]])[0];
+							})
+							.attr('cy', function(d){
+								return projection([d[1], d[0]])[1];
+							})
+							.attr('r', 5)
+							.attr('class', 'crimes')
+							.style('opacity', 0.4)
+							.style('fill', function(d){
+								return colorMapping[d[k]];
+							});
+
+						geoMap.selectAll('.centroids')
+							.data(clusters[k-2])
+							.enter()
+							.append('circle')
+							.attr('cx', function(d){
+								return projection([d[1], d[0]])[0];
+							})
+							.attr('cy', function(d){
+								return projection([d[1], d[0]])[1];
+							})
+							.attr('r', 15)
+							.attr('class', 'centroids')
+							.style('stroke-width', 4)
+							.style('stroke', 'white')
+							.style('fill', 'none');
+
+						d3.select('#k2')
+							.on('mouseover', function(){
+								kprv = k;
+								k = 2;
+								update();
+							})
+							.on('mouseout', function(){
+								k = kprv;
+								update();
+							})
+							.on('click', function(){
+								k = 2;
+								kprv = 2;
+								update();
+							});
+						d3.select('#k3')
+							.on('mouseover', function(){
+								kprv = k;
+								k = 3;
+								update();
+							})
+							.on('mouseout', function(){
+								k = kprv;
+								update();
+							})
+							.on('click', function(){
+								k = 3;
+								kprv = 3;
+								update();
+							});
+						d3.select('#k4')
+							.on('mouseover', function(){
+								kprv = k;
+								k = 4;
+								update();
+							})
+							.on('mouseout', function(){
+								k = kprv;
+								update();
+							})
+							.on('click', function(){
+								k = 4;
+								kprv = 4;
+								update();
+							});
+						d3.select('#k5')
+							.on('mouseover', function(){
+								kprv = k;
+								k = 5;
+								update();
+							})
+							.on('mouseout', function(){
+								k = kprv;
+								update();
+							})
+							.on('click', function(){
+								k = 5;
+								kprv = 5;
+								update();
+							});
+						d3.select('#k6')
+							.on('mouseover', function(){
+								kprv = k;
+								k = 6;
+								update();
+							})
+							.on('mouseout', function(){
+								k = kprv;
+								update();
+							})
+							.on('click', function(){
+								k = 6;
+								kprv = 6;
+								update();
+							});
+						geoMap.append('text')
+							.attr('x', 300)
+							.attr('y', 100)
+							.attr("text-anchor", "middle")  
+							.style("font-size", "20px") 
+							.style("text-decoration", "underline")  
+							.text(function(){
+								return 'K = ' + k;
+							})
+							.attr('class', 'ktitle');
+
+							function update(){
+							geoMap.selectAll('.crimes')
+								.data(crimes)
+								.style('fill', function(d){
+									return colorMapping[d[k]];
+								});
+							geoMap.selectAll('.centroids')
+								.remove()
+							geoMap.selectAll('.centroids')
+								.data(clusters[k-2])
+								.enter()
+								.append('circle')
+								.attr('cx', function(d){
+									return projection([d[1], d[0]])[0];
+								})
+								.attr('cy', function(d){
+									return projection([d[1], d[0]])[1];
+								})
+								.attr('r', 15)
+								.attr('class', 'centroids')
+								.style('stroke-width', 4)
+								.style('stroke', 'white')
+								.style('fill', 'none');
+							geoMap.select('.ktitle')
+								.text(function(){
+									return 'K = ' + k;
+								})
+						}
+			  });
+			});
+		  </script>
+	  </div>
+      <div class='wrapper' id='buttons'>
+        <input type="button" class="button" value="K = 2" id='k2'>
+        <input type="button" class="button" value="K = 3" id='k3'>
+        <input type="button" class="button" value="K = 4" id='k4'>
+        <input type="button" class="button" value="K = 5" id='k5'>
+        <input type="button" class="button" value="K = 6" id='k6'>
+      </div>
+<!---------- Clustering END ---------->
+
+<!---------- Multiple regression START ---------->
+	<div class="wrapper" id="3dPlotGoesHere">
+		<script type="text/javascript">
+		// 3D Scatter Plot
+		function createTextCanvas(text, color, font, size) {
+        size = size || 16;
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        var fontStr = (size + 'px ') + (font || 'Arial');
+        ctx.font = fontStr;
+        var w = ctx.measureText(text).width;
+        var h = Math.ceil(size);
+        canvas.width = w;
+        canvas.height = h;
+        ctx.font = fontStr;
+        ctx.fillStyle = color || 'black';
+        ctx.fillText(text, 0, Math.ceil(size * 0.8));
+        return canvas;
+    }
+
+    function createText2D(text, color, font, size, segW, segH) {
+        var canvas = createTextCanvas(text, color, font, size);
+        var plane = new THREE.PlaneGeometry(canvas.width, canvas.height, segW, segH);
+        var tex = new THREE.Texture(canvas);
+        tex.needsUpdate = true;
+        var planeMat = new THREE.MeshBasicMaterial({
+            map: tex,
+            color: 0xffffff,
+            transparent: true
+        });
+        var mesh = new THREE.Mesh(plane, planeMat);
+        mesh.scale.set(0.5, 0.5, 0.5);
+        mesh.doubleSided = true;
+        return mesh;
+    }
+
+    // from http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+    function hexToRgb(hex) { //TODO rewrite with vector output
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    var renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
+    var w = 1000;
+    var h = 540;
+    renderer.setSize(w, h);
+	
+    document.getElementById("3dPlotGoesHere").appendChild(renderer.domElement);
+
+    renderer.setClearColor(0xffffff, 1);
+
+    var camera = new THREE.PerspectiveCamera(45, w / h, 1, 10000);
+    camera.position.z = 200;
+    camera.position.x = -100;
+    camera.position.y = 100;
+
+    var scene = new THREE.Scene();
+
+    var scatterPlot = new THREE.Object3D();
+    scene.add(scatterPlot);
+
+    scatterPlot.rotation.y = 0;
+
+    function v(x, y, z) {
+        return new THREE.Vector3(x, y, z);
+    }
+
+    var unfiltered = [];
+
+    var format = d3.format("+.3f");
+
+    var data = d3.csv("dataset/XYZ.csv", function (d) {
+	        d.forEach(function (d,i) {
+            unfiltered[i] = {
+                x: +d.X,
+                y: +d.Y,
+                z: +d.Z
+            }
+        })
+
+    var xExent = d3.extent(unfiltered, function (d) {return d.x; }),
+        yExent = d3.extent(unfiltered, function (d) {return d.y; }),
+        zExent = d3.extent(unfiltered, function (d) {return d.z; });
+
+    var vpts = {
+        xMax: xExent[1],
+        xCen: (xExent[1] + xExent[0]) / 2,
+        xMin: xExent[0],
+        yMax: yExent[1],
+        yCen: (yExent[1] + yExent[0]) / 2,
+        yMin: yExent[0],
+        zMax: zExent[1],
+        zCen: (zExent[1] + zExent[0]) / 2,
+        zMin: zExent[0]
+    }
+
+    var colour = d3.scale.category20c();
+
+    var xScale = d3.scale.linear()
+                  .domain(xExent)
+                  .range([-50,50]);
+    var yScale = d3.scale.linear()
+                  .domain(yExent)
+                  .range([-50,50]);                  
+    var zScale = d3.scale.linear()
+                  .domain(zExent)
+                  .range([-50,50]);
+
+    var lineGeo = new THREE.Geometry();
+    lineGeo.vertices.push(
+        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zCen)),
+        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zCen)),
+        v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMin)),
+
+        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)),
+        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
+
+        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMax)),
+        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMin)),
+        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zCen)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zCen)),
+
+        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)),
+        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)),
+
+        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMax)),
+        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)),
+        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zCen)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zCen)),
+
+        v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)),
+        v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
+        v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)),
+        v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)),
+
+        v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMax)),
+        v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMax)),
+        v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)),
+        v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax))
+
+    );
+    var lineMat = new THREE.LineBasicMaterial({
+        color: 0xdcdcdc,
+        lineWidth: 2
+    });
+    var line = new THREE.Line(lineGeo, lineMat);
+    line.type = THREE.Lines;
+    scatterPlot.add(line);
+
+    var titleX = createText2D('-X');
+    titleX.position.x = xScale(vpts.xMin) - 12,
+    titleX.position.y = 5;
+    scatterPlot.add(titleX);
+
+    var valueX = createText2D(format(xExent[0]));
+    valueX.position.x = xScale(vpts.xMin) - 12,
+    valueX.position.y = -5;
+    scatterPlot.add(valueX);
+
+    var titleX = createText2D('X');
+    titleX.position.x = xScale(vpts.xMax) + 12;
+    titleX.position.y = 5;
+    scatterPlot.add(titleX);
+
+    var valueX = createText2D(format(xExent[1]));
+    valueX.position.x = xScale(vpts.xMax) + 12,
+    valueX.position.y = -5;
+    scatterPlot.add(valueX);
+
+    var titleY = createText2D('-Y');
+    titleY.position.y = yScale(vpts.yMin) - 5;
+    scatterPlot.add(titleY);
+
+    var valueY = createText2D(format(yExent[0]));
+    valueY.position.y = yScale(vpts.yMin) - 15,
+    scatterPlot.add(valueY);
+
+    var titleY = createText2D('Y');
+    titleY.position.y = yScale(vpts.yMax) + 15;
+    scatterPlot.add(titleY);
+
+    var valueY = createText2D(format(yExent[1]));
+    valueY.position.y = yScale(vpts.yMax) + 5,
+    scatterPlot.add(valueY);
+
+    var titleZ = createText2D('-Z ' + format(zExent[0]));
+    titleZ.position.z = zScale(vpts.zMin) + 2;
+    scatterPlot.add(titleZ);
+
+    var titleZ = createText2D('Z ' + format(zExent[1]));
+    titleZ.position.z = zScale(vpts.zMax) + 2;
+    scatterPlot.add(titleZ);
+
+    var mat = new THREE.ParticleBasicMaterial({
+        vertexColors: true,
+        size: 5
+    });
+	
+    var pointCount = unfiltered.length;
+    var pointGeo = new THREE.Geometry();
+    for (var i = 0; i < pointCount; i ++) {
+        var x = xScale(unfiltered[i].x);
+        var y = yScale(unfiltered[i].y);
+        var z = zScale(unfiltered[i].z);
+
+		pointGeo.vertices.push(new THREE.Vector3(x, y, z));
+        pointGeo.colors.push(new THREE.Color().setRGB(
+          hexToRgb(colour(i)).r / 255, hexToRgb(colour(i)).g / 255, hexToRgb(colour(i)).b / 255 
+        ));
+
+    }
+    var points = new THREE.Points(pointGeo, mat);
+    scatterPlot.add(points);
+
+    renderer.render(scene, camera);
+    var paused = false;
+    var last = new Date().getTime();
+    var down = false;
+    var sx = 0,
+        sy = 0;
+        
+    window.onmousedown = function(ev) {
+        down = true;
+        sx = ev.clientX;
+        sy = ev.clientY;
+    };
+    window.onmouseup = function() {
+        down = false;
+    };
+    window.onmousemove = function(ev) {
+        if (down) {
+            var dx = ev.clientX - sx;
+            var dy = ev.clientY - sy;
+            scatterPlot.rotation.y += dx * 0.01;
+            camera.position.y += dy;
+            sx += dx;
+            sy += dy;
+        }
+    }
+    var animating = false;
+    window.ondblclick = function() {
+        animating = !animating;
+    };
+
+    function animate(t) {
+        if (!paused) {
+            last = t;
+            if (animating) {
+                var v = pointGeo.vertices;
+                for (var i = 0; i < v.length; i++) {
+                    var u = v[i];
+                    console.log(u)
+                    u.angle += u.speed * 0.01;
+                    u.x = Math.cos(u.angle) * u.radius;
+                    u.z = Math.sin(u.angle) * u.radius;
+                }
+                pointGeo.__dirtyVertices = true;
+            }
+            renderer.clear();
+            camera.lookAt(scene.position);
+            renderer.render(scene, camera);
+        }
+        window.requestAnimationFrame(animate, renderer.domElement);
+    };
+    animate(new Date().getTime());
+    onmessage = function(ev) {
+        paused = (ev.data == 'pause');
+    };
+
+    })
+		</script>
+	</div>
+<!---------- Multiple regression END ---------->
+
+	</section>
+</body>
