@@ -475,7 +475,7 @@
             });
 
           function makeMultipleRegression(name){
-            var data = d3.csv("dataset/"+name+"_XYZ.csv", function (d) {
+            var data = d3.csv("docs/dataset/"+name+"_XYZ.csv", function (d) {
               d.forEach(function (d,i) {
               unfiltered[i] = {
                 x: +d.X,
