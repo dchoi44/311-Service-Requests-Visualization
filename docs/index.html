@@ -51,36 +51,70 @@
       font-size: 11px;
     }
 
-    .labels:hover {
-      fill: red;
+    text.label:hover {
+      fill: black;
       font-size: 20px;
       font-weight: bold;
+      hoverknn();
     }
     
     g.legendOrdinal {
       font-family: 'Ubuntu', sans-serif;
       font-weight: bold;
+      font-size: 15px;
+    }
+    
+    path.swatch {
+      stroke: black;
+      stroke-width: 1px;
     }
 
+    path.stream:hover {
+      stroke: yellow;
+      fill: orange;
+      stroke-width: 3px;
+      opacity: 1;
+    }
+    .tooltip {
+      position: absolute;
+      text-align: left;
+      width: 120px;
+      height: 40px;
+      padding: 8px;
+      margin-top: -20px;
+      font: 15px 'Ubuntu';
+      font-weight:bold;
+      background: none;
+      pointer-events: none;
+      text-shadow:
+        -1px -1px 0 #FFF,  
+        1px -1px 0 #FFF,
+        -1px  1px 0 #FFF,
+        1px  1px 0 #FFF;
+    }
     .wrapper {
       text-align: center;
+    }
   </style>
-<<<<<<< HEAD
 </head>
 
 <body>
   <section class="page-header">
     <h1 class="project-name">Project B</h1>
     <h2 class="project-tagline"></h2>
-    <a href="https://github.com/Rickeyhb/socialdataanalysis2017" class="btn">View on Github</a>
+    <a href="https://github.com/dchoi44/311-Service-Requests-Visualization" class="btn">View on Github</a>
   </section>
 
   <section class="main-content">
+    <div class='wrapper' id='geoMapGoesHere'> </div>
+    <div class='wrapper' id='boxplot'>
+      <img src='dataset/cross_validation.png'>
+    </div>
+    <div class='wrapper' id='nyczipmap'> </div>
+    <div class='wrapper' id='streamGraphHere'></div>
     <div id="exe2">
       <h1>Assignment 2B: Visualizing Geodata</h1>
       <p> The graph below shows prostitution in San Fransico clustered using the k-means algorithm. </p>
-      <div class='wrapper' id='geoMapGoesHere'> </div>
-      <div class='wrapper' id='nyczipmap'> </div>
       <p>Note: Think carefully about how you can minimize the size of the file containing the data. My file is around 700KB. Why is the size of the file important?</p>
       <p>The size of our file is around 725KB. Data structure was a simple csv file containing each cplnts' latitude, longitude, and their cluster id corresponds to K values.</p>
       <p> The size of data matters since every time we change K, we have to process the data.</p>
@@ -103,6 +137,7 @@
     var h = 600;
 
     var myColorScheme = d3.schemeYlGnBu[9];
+    var myColorSchemeLn = d3.interpolateYlGnBu;
 
     var cplnts = [];
 
@@ -131,11 +166,11 @@
         .append("path")
         .attr("d", path)
         .attr('fill', 'white')
-        .attr('id', 'mapfrag')
         .attr('zc', function(d){
           return d.properties.postalCode;
         });
 
+      var complaintList = ['Noise - Residential', 'Illegal Parking', 'UNSANITARY CONDITION', 'Homeless Person Assistance', 'Rodent'];   
       d3.csv('dataset/knnGridResult.csv', function(d) {
         for (var i = 0; i < d.length; i++) {
           cplnts.push([Number(d[i]['lat']), Number(d[i]['lon']), Number(d[i]['cat'])])
@@ -156,28 +191,80 @@
           })
           .attr('height',6)
           .attr('width', 6)
-          .attr('class', 'dot')
+          .attr('rx', 2)
+          .attr('ry', 2)
+          .attr('class', function(d){
+            return 'dotclass' + d[2];
+          })
           .style('opacity', 1)
+          .attr('stroke', 'skyblue')
+          .attr('stroke-width', 0.3)
           .style('fill', function(d){
             return myColorScheme[d[2] * 2];
           });
       });
 
       var ordinal = d3.scaleOrdinal()
-        .domain(['PLUMBING','Noise - Commercial', 'Street Light Condition', 'Homeless Person Assistance', 'DOOR/WINDOW'])
+        .domain(complaintList)
         .range([myColorScheme[0],myColorScheme[2],myColorScheme[4],myColorScheme[6],myColorScheme[8]]);
 
       geoMap.append("g")
         .attr('class', 'legendOrdinal')
-        .attr('transform', 'translate(150,150)');
+        .attr('transform', 'translate(180,60)');
 
       var legendOrdinal = d3.legendColor()
         .shape('path', d3.symbol().type(d3.symbolSquare).size(150)())
         .shapePadding(10)
-        .scale(ordinal)
+        .scale(ordinal);
 
       geoMap.select('.legendOrdinal')
-        .call(legendOrdinal)
+        .call(legendOrdinal);
+
+      geoMap.selectAll('.cell')
+        .on("mouseover", hoverinknn)
+        .on("mouseout", hoveroutknn);
+
+      function hoverinknn(d){
+        Ndata = complaintList.indexOf(d);
+        geoMap.select('.dots')
+          .selectAll('rect')
+          .transition()
+          .duration(100)
+          .style('fill', function(d){
+            if (d[2] == Ndata){
+              return myColorScheme[7];
+            } else {
+              return 'grey';
+            }
+          })
+          .attr('height', function(d){
+            if (d[2] == Ndata){
+              return 8;
+            } else {
+              return 6;
+            }
+          })
+          .attr('width', function(d){
+            if (d[2] == Ndata){
+              return 8;
+            } else {
+              return 6;
+            }
+          });
+      }
+
+      function hoveroutknn(d){
+        Ndata = complaintList.indexOf(d);
+        geoMap.select('.dots')
+          .selectAll('rect')
+          .transition()
+          .duration(100)
+          .style('fill', function(d){
+            return myColorScheme[d[2] * 2];
+          })
+          .attr('height', 6)
+          .attr('width', 6);
+      }
 
       d3.csv('dataset/complaints_ZC.csv', function(d){
         stat = {};  
@@ -193,6 +280,8 @@
         var cloned = cloneSelection(nyczipmap, mapgroup, 1);
 
         cloned.selectAll('path')
+          .transition()
+          .duration(2500)
           .attr('fill', function(){
             zc = this.attributes.zc.value;
             if (zc in stat == true){
@@ -201,8 +290,49 @@
             else{
               return myColorScheme[0];
             }})
+          .attr('orifill', function(){
+            zc = this.attributes.zc.value;
+            if (zc in stat == true){
+              return myColorScheme[stat[zc]];
+            }
+            else{
+              return myColorScheme[0];
+            }})
           .attr('stroke', 'black')
-          .attr('stroke-width', '0.4');
+          .attr('stroke-width', '0.4')
+          .attr('class', function(){
+            return 'mapfrag' + this.attributes.zc.value;
+          })
+
+        cloned.selectAll('path')
+          .on("mouseover", hoverinZC)
+          .on("mousemove", moveZC)
+          .on("mouseout", hoveroutZC);
+
+        function hoverinZC(d){
+          var zc = this.attributes.zc.value;
+          cloned.select('.mapfrag' + zc)
+            .attr('stroke', 'skyblue')
+            .attr('stroke-width', 3)
+            .attr('fill', 'black');
+          tt1.style("display", "inline");
+        }
+
+        function hoveroutZC(d){
+          var zc = this.attributes.zc.value;
+          cloned.select('.mapfrag' + zc)
+            .attr('fill', this.attributes.orifill.value)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 0.4);
+          tt1.style('display', 'none');
+        }
+
+        function moveZC(d){
+          var zc = this.attributes.zc.value;
+          tt1.text(zc)
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 18) + "px");
+        }
 
         var color = d3.scaleThreshold()
           .domain(d3.range(0,8))
@@ -253,7 +383,146 @@
             .attr('font-family', 'Ubuntu')
             .attr('font-size', 10)
             .text('~37000 HIGH');
+
+        var tt1 = d3.select("body").append("div")
+          .attr("class", "tooltip")
+          .style("display", "none");
       });
+    });
+
+    d3.csv('dataset/streamGraph.csv', function(d){
+      var n = 20, // number of layers
+          header = d3.keys(d[0]),
+          dataset = {};
+      for (var i = 0; i < header.length; i++) {
+        dataset[header[i]] = [];
+      }
+      for (var i = 0; i < d.length; i++) {
+        for (var j = 0; j < header.length; j++) {
+          dataset[header[j]].push(d[i][header[j]])
+        }
+      }
+      var m = dataset[header[0]].length;
+
+      var stack = d3.stack().keys(d3.range(n)).offset(d3.stackOffsetWiggle),
+          layers0 = stack(d3.transpose(d3.range(n).map(function(d) { return dataset[header[d]]; }))),
+          layers1 = stack(d3.transpose(d3.range(n).map(function(d) { return dataset[header[d]]; }))),
+          layers = layers0.concat(layers1);
+
+      var streamGraph = d3.select("#streamGraphHere").append('svg');
+      streamGraph.attr('height', h).attr('width', w);
+      var width = +streamGraph.attr("width"),
+          height = +streamGraph.attr("height");
+
+      var x = d3.scaleLinear()
+          .domain([0, m - 1])
+          .range([0, width]);
+
+      var y = d3.scaleLinear()
+          .domain([d3.min(layers, stackMin), d3.max(layers, stackMax)])
+          .range([height - 40, 0]);
+
+      var z = myColorSchemeLn;
+
+      var area = d3.area()
+          .x(function(d, i) { return x(i); })
+          .y0(function(d) { return y(d[0]); })
+          .y1(function(d) { return y(d[1]); });
+
+      streamGraph.append('g')
+        .attr('class', 'helplines')
+        .selectAll('#helpline')
+        .data(d3.range(9))
+        .enter()
+        .append('path')
+        .attr('class', 'helpline')
+        .attr('d', function(d){
+          var xv = x(d * 6)
+          if (xv == 0){
+            xv += 1;
+          } else if (xv == width){
+            xv -= 1;
+          }
+          var yv = y(layers0[layers0.length - 1][d * 6][1])
+          var yv2 = y(layers0[0][d * 6][0])
+          return 'M ' + xv + ' ' + yv2 + '\n' + 
+                 'L ' + xv + ' ' + yv
+        })
+        .attr('stroke', 'black')
+        .attr('stroke-width', '2');
+
+      streamGraph.append('g')
+        .attr('class', 'hllabels')
+        .selectAll('#hllabel')
+        .data(d3.range(5))
+        .enter()
+        .append('text')
+        .attr('class', 'hllabel')
+        .text(function(d){
+          return ['00:00', '06:00', '12:00', '18:00', '24:00'][d];
+        })
+        .attr('x', function(d){
+          if(d == 0){
+            return 30;
+          } else if (d == 4){
+            return width - 30;
+          } return x(d * 12);
+        })
+        .attr('y', height - 20)
+        .attr('font-size', 25)
+        .attr('font-weight', 'bold')
+        .attr('text-align', 'center')
+        .attr('text-anchor', 'middle')
+        .attr('font-family', 'Ubuntu')
+        .attr('background', 'blue');
+
+      var tt = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("display", "none");
+
+      streamGraph.append('g')
+        .attr('class', 'streams')
+        .selectAll("#stream")
+        .data(layers0)
+        .enter().append("path")
+          .attr("d", area)
+          .attr("fill", function(d) { 
+            return z(Math.random()); })
+          .attr('opacity', '0.8')
+          .attr('stroke', 'black')
+          .attr('stroke-width', '0.5')
+          .attr('class', 'stream')
+          .attr('CT', function(d) {
+            return header[d.key];
+          })
+          .on("mouseover", function() {tt.style("display", "inline")})
+          .on("mousemove", mousemovestream)
+          .on("mouseout", function() {tt.style('display', 'none')});
+
+      function mousemovestream(data){
+        kwd = header[data.key]
+        idx = parseInt(x.invert(d3.event.pageX))
+        tt.text(kwd + ': ' + dataset[kwd][idx]+' Complaints')
+          .style("left", (d3.event.pageX + 10) + "px")
+          .style("top", (d3.event.pageY - 18) + "px");
+      }
+
+      function stackMax(layer) {
+        return d3.max(layer, function(d) { return d[1]; });
+      }
+
+      function stackMin(layer) {
+        return d3.min(layer, function(d) { return d[0]; });
+      }
+
+      function transition() {
+        var t;
+        d3.selectAll("path")
+          .data((t = layers1, layers1 = layers0, layers0 = t))
+          .transition()
+            .duration(2500)
+            .attr("d", area);
+      }
     });
   </script>
 </body>
