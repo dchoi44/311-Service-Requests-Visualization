@@ -121,7 +121,7 @@
             <div class='wrapper' id='streamGraphHere'></div>  
             <div class='wrapper' id='knnHere'> </div>
             <div class='wrapper' id='boxplot'>
-              <img src='dataset/cross_validation.png'>
+              <img src='docs/dataset/cross_validation.png'>
             </div>
         <!---------- Clustering START ---------->
             <div class='wrapper' id='geoMapGoesHere'>
@@ -172,7 +172,7 @@
               colorMapping[4] = 'skyblue';
               colorMapping[5] = 'orange';
 
-              d3.json("dataset/NYCzip.geojson", function(json) {
+              d3.json("docs/dataset/NYCzip.geojson", function(json) {
                 geoMap.selectAll("path")
                 .data(json.features)
                 .enter()
@@ -727,7 +727,7 @@
             var mapgroup = knnMap.append('g')
               .attr('class', 'map')
 
-            d3.json("dataset/NYCZip.geojson", function(json) {
+            d3.json("docs/dataset/NYCZip.geojson", function(json) {
 
               knnMap.selectAll(".map")
                 .selectAll('path')
@@ -741,7 +741,7 @@
                 });
 
               var complaintList = ['Noise - Residential', 'Illegal Parking', 'UNSANITARY CONDITION', 'Homeless Person Assistance', 'Rodent'];   
-              d3.csv('dataset/knnGridResult.csv', function(d) {
+              d3.csv('docs/dataset/knnGridResult.csv', function(d) {
                 for (var i = 0; i < d.length; i++) {
                   cplnts.push([Number(d[i]['lat']), Number(d[i]['lon']), Number(d[i]['cat'])])
                 }
@@ -836,7 +836,7 @@
                   .attr('width', 6);
               }
 
-              d3.csv('dataset/complaints_ZC.csv', function(d){
+              d3.csv('docs/dataset/complaints_ZC.csv', function(d){
                 stat = {};  
                 for (var i = 0; i < d.length; i++) {
                   stat[d[i]['ZC']] = Number(d[i][' number'])
@@ -960,7 +960,7 @@
               });
             });
 
-            d3.csv('dataset/streamGraph.csv', function(d){
+            d3.csv('docs/dataset/streamGraph.csv', function(d){
               var n = 20, // number of layers
                   header = d3.keys(d[0]),
                   dataset = {};
