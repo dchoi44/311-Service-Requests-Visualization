@@ -6,8 +6,12 @@
   <title>Project 1</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#157878">
-  <script type="text/javascript" src="d3/d3.v3.min.js"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/1.13.0/d3-legend.js"></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.min.js"></script>
+  <script src="https://d3js.org/d3-color.v1.min.js"></script>
+  <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script src="https://d3js.org/d3-axis.v1.min.js"></script>
   <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
   <style type="text/css">
       #exe1 {
@@ -55,6 +59,7 @@
     
     g.legendOrdinal {
       font-family: 'Ubuntu', sans-serif;
+      font-weight: bold;
     }
 
     .wrapper {
@@ -65,109 +70,190 @@
 
 <body>
   <section class="page-header">
-    <h1 class="project-name">Assignment 2</h1>
+    <h1 class="project-name">Project B</h1>
     <h2 class="project-tagline"></h2>
     <a href="https://github.com/Rickeyhb/socialdataanalysis2017" class="btn">View on Github</a>
   </section>
 
   <section class="main-content">
-
     <div id="exe2">
       <h1>Assignment 2B: Visualizing Geodata</h1>
       <p> The graph below shows prostitution in San Fransico clustered using the k-means algorithm. </p>
       <div class='wrapper' id='geoMapGoesHere'> </div>
-      <script type="text/javascript">
-        var w = 1000;
-        var h = 600;
-        var k = 2;
-        var kprv = 2;
-        var colorMapping = {}
-
-        colorMapping[0] = 'purple';
-        colorMapping[1] = 'green';
-        colorMapping[2] = 'red';
-        colorMapping[3] = 'blue';
-        colorMapping[4] = 'skyblue';
-        colorMapping[5] = 'orange'
-
-        var crimes = [];
-
-        var projection = d3.geo.mercator()
-          .center([-73.94, 40.70])
-          .translate([w / 2, h / 2])
-          .scale([60000]);
-
-        var path = d3.geo.path()
-          .projection(projection);
-
-        var geoMap = d3.select('#geoMapGoesHere')
-          .append('svg')
-          .attr("width", w)
-          .attr("height", h);
-
-
-        d3.json("dataset/NYC.geojson", function(json) {
-          geoMap.append('g')
-            .attr('class', 'map')
-
-          geoMap.selectAll(".map")
-            .selectAll('path')
-            .data(json.features)
-            .enter()
-            .append("path")
-            .attr("d", path);
-
-          d3.csv('dataset/knnGridResult.csv', function(d) {
-            for (var i = 0; i < d.length; i++) {
-              crimes.push([Number(d[i]['lat']), Number(d[i]['lon']), Number(d[i]['cat'])])
-            }
-            geoMap.append('g')
-              .attr('class', 'dots')
-
-            geoMap.selectAll('.dots')
-              .selectAll('.dot')
-              .data(crimes)
-              .enter()
-              .append('rect')
-              .attr('x', function(d) {
-                return projection([d[1], d[0]])[0] - 3;
-              })
-              .attr('y', function(d) {
-                return projection([d[1], d[0]])[1] - 3;
-              })
-              .attr('height',6)
-              .attr('width', 6)
-              .attr('class', 'dot')
-              .style('opacity', 0.8)
-              .style('fill', function(d){
-                return colorMapping[d[2]];
-              });
-          });
-
-        var ordinal = d3.scale.ordinal()
-          .domain(['PLUMBING','Noise - Commercial', 'Street Light Condition', 'Homeless Person Assistance', 'DOOR/WINDOW'])
-          .range(['purple', 'green', 'red', 'blue', 'skyblue']);
-
-        geoMap.append("g")
-          .attr('class', 'legendOrdinal')
-          .attr('transform', 'translate(150,150)');
-
-        var legendOrdinal = d3.legend.color()
-          .shape('path', d3.svg.symbol().type('square').size(150)())
-          .shapePadding(10)
-          .scale(ordinal)
-
-        geoMap.select('.legendOrdinal')
-          .call(legendOrdinal)
-
-        });
-      </script>
+      <div class='wrapper' id='nyczipmap'> </div>
       <p>Note: Think carefully about how you can minimize the size of the file containing the data. My file is around 700KB. Why is the size of the file important?</p>
-      <p>The size of our file is around 725KB. Data structure was a simple csv file containing each crimes' latitude, longitude, and their cluster id corresponds to K values.</p>
+      <p>The size of our file is around 725KB. Data structure was a simple csv file containing each cplnts' latitude, longitude, and their cluster id corresponds to K values.</p>
       <p> The size of data matters since every time we change K, we have to process the data.</p>
     </div>
 
     <footer class="site-footer">
     </footer>
   </section>
+  <script type="text/javascript">
+    function cloneSelection(appendTo, toCopy, times) {
+      toCopy.each(function() {
+        for (var i = 0; i < times; i++) {
+          var clone = appendTo.node().appendChild(this.cloneNode(true));
+          d3.select(clone).attr("class", "clone");
+        }
+      });
+      return appendTo.selectAll('.clone');
+    }
+    var w = 1000;
+    var h = 600;
+
+    var myColorScheme = d3.schemeYlGnBu[9];
+
+    var cplnts = [];
+
+    var projection = d3.geoMercator()
+      .center([-73.94, 40.70])
+      .translate([w / 2, h / 2])
+      .scale([60000]);
+
+    var path = d3.geoPath()
+      .projection(projection);
+
+    var geoMap = d3.select('#geoMapGoesHere')
+      .append('svg')
+      .attr("width", w)
+      .attr("height", h);
+
+    var mapgroup = geoMap.append('g')
+      .attr('class', 'map')
+
+    d3.json("dataset/NYCZip.geojson", function(json) {
+
+      geoMap.selectAll(".map")
+        .selectAll('path')
+        .data(json.features)
+        .enter()
+        .append("path")
+        .attr("d", path)
+        .attr('fill', 'white')
+        .attr('id', 'mapfrag')
+        .attr('zc', function(d){
+          return d.properties.postalCode;
+        });
+
+      d3.csv('dataset/knnGridResult.csv', function(d) {
+        for (var i = 0; i < d.length; i++) {
+          cplnts.push([Number(d[i]['lat']), Number(d[i]['lon']), Number(d[i]['cat'])])
+        }
+        geoMap.append('g')
+          .attr('class', 'dots')
+
+        geoMap.selectAll('.dots')
+          .selectAll('.dot')
+          .data(cplnts)
+          .enter()
+          .append('rect')
+          .attr('x', function(d) {
+            return projection([d[1], d[0]])[0] - 3;
+          })
+          .attr('y', function(d) {
+            return projection([d[1], d[0]])[1] - 3;
+          })
+          .attr('height',6)
+          .attr('width', 6)
+          .attr('class', 'dot')
+          .style('opacity', 1)
+          .style('fill', function(d){
+            return myColorScheme[d[2] * 2];
+          });
+      });
+
+      var ordinal = d3.scaleOrdinal()
+        .domain(['PLUMBING','Noise - Commercial', 'Street Light Condition', 'Homeless Person Assistance', 'DOOR/WINDOW'])
+        .range([myColorScheme[0],myColorScheme[2],myColorScheme[4],myColorScheme[6],myColorScheme[8]]);
+
+      geoMap.append("g")
+        .attr('class', 'legendOrdinal')
+        .attr('transform', 'translate(150,150)');
+
+      var legendOrdinal = d3.legendColor()
+        .shape('path', d3.symbol().type(d3.symbolSquare).size(150)())
+        .shapePadding(10)
+        .scale(ordinal)
+
+      geoMap.select('.legendOrdinal')
+        .call(legendOrdinal)
+
+      d3.csv('dataset/complaints_ZC.csv', function(d){
+        stat = {};  
+        for (var i = 0; i < d.length; i++) {
+          stat[d[i]['ZC']] = Number(d[i][' number'])
+        }
+
+        var nyczipmap = d3.select('#nyczipmap')
+          .append('svg')
+          .attr('height', h)
+          .attr('width', w)
+
+        var cloned = cloneSelection(nyczipmap, mapgroup, 1);
+
+        cloned.selectAll('path')
+          .attr('fill', function(){
+            zc = this.attributes.zc.value;
+            if (zc in stat == true){
+              return myColorScheme[stat[zc]];
+            }
+            else{
+              return myColorScheme[0];
+            }})
+          .attr('stroke', 'black')
+          .attr('stroke-width', '0.4');
+
+        var color = d3.scaleThreshold()
+          .domain(d3.range(0,8))
+          .range(myColorScheme);
+
+        var x = d3.scaleLinear()
+          .domain([-1, 8])
+          .rangeRound([600, 860]);
+
+        var g = nyczipmap.append("g")
+          .attr("class", "key")
+          .attr("transform", "translate(-400,80)");
+
+        g.selectAll("rect")
+          .data(color.range().map(function(d) {
+              d = color.invertExtent(d);
+              if (d[0] == null) d[0] = x.domain()[0];
+              if (d[1] == null) d[1] = x.domain()[1];
+              return d;
+            }))
+          .enter().append("rect")
+            .attr("height", 8)
+            .attr("x", function(d) { return x(d[0]); })
+            .attr("width", function(d) { return x(d[1]) - x(d[0]); })
+            .attr("fill", function(d) { return color(d[0]); });
+
+        g.append("text")
+            .attr("class", "caption")
+            .attr("x", x.range()[0])
+            .attr("y", -6)
+            .attr("fill", "#000")
+            .attr("text-anchor", "start")
+            .attr("font-weight", "bold")
+            .text("Number of Complaints")
+            .attr('font-family', 'Ubuntu');
+
+        g.append('text')
+            .attr('x', x.range()[0])
+            .attr('y', 20)
+            .attr('font-family', 'Ubuntu')
+            .attr('font-size', 10)
+            .text('LOW 0~');
+
+        g.append('text')
+            .attr('x', x.range()[1])
+            .attr('y', 20)
+            .attr('text-anchor', 'end')
+            .attr('font-family', 'Ubuntu')
+            .attr('font-size', 10)
+            .text('~37000 HIGH');
+      });
+    });
+  </script>
 </body>

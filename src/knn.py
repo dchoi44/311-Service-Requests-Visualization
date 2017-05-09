@@ -1,5 +1,5 @@
 from sklearn.neighbors import KNeighborsClassifier
-from csv import DictReader, DictWriter
+from csv import DictReader
 
 complaints = []
 with open('../docs/dataset/REFINED_311_Service_Requests_2016.csv', 'r') as fin:
