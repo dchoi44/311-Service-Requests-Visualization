@@ -122,11 +122,32 @@
       <section id="main_content" class="inner">
 
           <section class="main-content">
-            <div class='wrapper' id='nyczipmap'> </div>
-            <div class='wrapper' id='streamGraphHere'></div>  
-            <div class='wrapper' id='knnHere'> </div>
+            <h1 align='left'>Where is the best neighborhood in NYC to live?</h1>
+            <p>
+              New York city is one of the most beautiful, fast changing, and yet expensive, even somewhat dangerous city in the world. Living in downtown Manhattan must be really exciting experience. If you're into fasion and art, SoHo could be nicer choice. Like these, there is countless reason to live in New York, but what if your house turned out to be full of mice...?
+              
+              Sometimes it is much more important to avoid some conditions to have a sound life.
+              
+            </p>
+            <div class='wrapper' id='nyczipmap'>
+              <h1>Total Number of Complaints by ZIP Code</h1>
+              <svg></svg>
+              <p>a</p>
+            </div>
+            <div class='wrapper' id='streamGraphHere'> 
+              <h1>Stream Graph of a Day</h1>
+              <svg></svg>
+              <p>b</p>
+            </div> 
+            <div class='wrapper' id='knnHere'>
+              <h1>K-Nearest Neighbors Algorithm</h1>
+              <svg></svg>
+              <p>c</p>
+            </div>
             <div class='wrapper' id='boxplot'>
+              <h1>Box Plot from KNN</h1>
               <img src='docs/dataset/cross_validation.png'>
+              <p>d</p>
             </div>
         <!---------- Clustering START ---------->
             <div class='wrapper' id='geoMapGoesHere'>
@@ -447,7 +468,7 @@
 
             document.getElementById("3dPlotGoesHere").appendChild(renderer.domElement);
 
-            renderer.setClearColor(0xf2f2f2, 1);
+            renderer.setClearColor(0xffffff, 1);
 
             var camera = new THREE.PerspectiveCamera(45, w / h, 1, 10000);
             camera.position.z = 200;
@@ -725,7 +746,7 @@
               .projection(projection);
 
             var knnMap = d3.select('#knnHere')
-              .append('svg')
+              .select('svg')
               .attr("width", w)
               .attr("height", h);
 
@@ -848,7 +869,7 @@
                 }
 
                 var nyczipmap = d3.select('#nyczipmap')
-                  .append('svg')
+                  .select('svg')
                   .attr('height', h)
                   .attr('width', w)
 
@@ -984,7 +1005,7 @@
                   layers1 = stack(d3.transpose(d3.range(n).map(function(d) { return dataset[header[d]]; }))),
                   layers = layers0.concat(layers1);
 
-              var streamGraph = d3.select("#streamGraphHere").append('svg');
+              var streamGraph = d3.select("#streamGraphHere").select('svg');
               streamGraph.attr('height', h).attr('width', w);
               var width = +streamGraph.attr("width"),
                   height = +streamGraph.attr("height");
