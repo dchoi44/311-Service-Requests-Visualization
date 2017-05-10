@@ -100,6 +100,9 @@
       form{
         background: none;
       }
+      h1{
+        margin: 50px;
+      }
     </style>
   </head>
 
@@ -110,8 +113,7 @@
         <header class="inner">
           <a id="forkme_banner" href="https://github.com/dchoi44/311-Service-Requests-Visualization">View on GitHub</a>
           <a style="transform: translate(-500px,0px);" id="forkme_banner" href="https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-Present/erm2-nwe9">Original Dataset</a>
-
-
+          
           <h1 id="project_title">311-Service-Requests-Visualization</h1>
           <h2 id="project_tagline">Final project for 02806</h2>
 
@@ -127,29 +129,36 @@
             <h1 align='left'>Where is the best neighborhood in NYC to live?</h1>
             <p>
               New York city is one of the most beautiful, fast changing, and yet expensive, even somewhat dangerous city in the world. Living in downtown Manhattan must be really exciting experience. If you're into fasion and art, SoHo could be nicer choice. Like these, there is countless reason to live in New York, but what if your house turned out to be full of mice...?
-              
+            </p>
+            <p>
               Sometimes it is much more important to avoid some conditions to have a sound life.
-              
             </p>
             <div class='wrapper' id='nyczipmap'>
               <h1>Total Number of Complaints by ZIP Code</h1>
               <svg></svg>
-              <p>a</p>
+              <p>
+                #Hover over to see the zipcode. 
+              </p>
+              <p>
+                Above is a map colored by total number of all types of complaints from last year, 2016. The darker the color is, the more complaints the neighborhood has. As we can see here, residential areas have higher number of complaints, compare to those are not, for example, the central park.
+              </p>
             </div>
-            <div class='wrapper' id='streamGraphHere'> 
-              <h1>Stream Graph of a Day</h1>
-              <svg></svg>
-              <p>b</p>
-            </div> 
             <div class='wrapper' id='knnHere'>
               <h1>K-Nearest Neighbors Algorithm</h1>
               <svg></svg>
-              <p>c</p>
-            </div>
+              <p>
+                #Hover over to the legend to highlight.
+              </p>
+              <p>
+                We chose 5 essential complaint types to focus: Residential noise, Illegal parking, Unsanitary condition, Homeless person assistance, Rodent, and applied K-Nearest Neighbors algorithm. Simply speaking, predicting with KNN is as same as voting among k of closest points. We could check homeless people are grouped in certain locations. Also, rodent problem seemed to be having correlation with places reported as having bad hygiene. Other types were rather regurlarly distributed.
+              </p>
             <div class='wrapper' id='boxplot'>
               <h1>Box Plot from KNN</h1>
               <img src='docs/dataset/cross_validation.png'>
-              <p>d</p>
+              <p>
+                One good way to choose appropriate k value is by using cross-validation. When the k value is 3, the model seemed to have the best performance in average. This model is actually the base of the previous KNN result.
+              </p>
+            </div>
             </div>
         <!---------- Clustering START ---------->
             <div class='wrapper' id='geoMapGoesHere'>
@@ -216,7 +225,6 @@
                   .remove()
 
                 selectedDataset = this.value
-                console.log(selectedDataset)
 
 
               d3.csv('docs/dataset/'+ selectedDataset +'_Clustering.csv', function(d){
@@ -347,7 +355,7 @@
                   update();
                 });
                 geoMap.append('text')
-                .attr('x', 300)
+                .attr('x', 150)
                 .attr('y', 230)
                 .attr("text-anchor", "middle")  
                 .style("font-size", "20px") 
@@ -404,7 +412,20 @@
             </p>
           </div>
         <!---------- Clustering END ---------->
-
+          
+          <div class='wrapper' id='streamGraphHere'> 
+            <h1>Stream Graph of a Day</h1>
+            <svg></svg>
+            <p>
+              #Hover over to check complaint types and number of complaints according to time.
+            </p>
+            <p>
+              So far, we have checked spatial charicteristics of chosen complaint types. However, residential noise, for example, we could not get satisfying result out of our analysis. What are the notable features of these kind of complaints? 
+            </p>
+            <p>
+              We thought time period of the day might be it, and above is the result. As we expected, residential noise complaints were thriving near the midnight. 
+            </p>
+          </div> 
         <!---------- Multiple regression START ---------->
           <div class="radioButtons" >
             <form action="">
@@ -494,7 +515,6 @@
 
           //Changing dataset START
           var selectedDatasetRegression = d3.select('input[name=radioRegression]:checked').attr('value')
-            console.log(selectedDatasetRegression)
             makeMultipleRegression(selectedDatasetRegression)
 
           d3.selectAll("input[name='radioRegression']").on("change", function(){
@@ -688,7 +708,6 @@
                     var v = pointGeo.vertices;
                     for (var i = 0; i < v.length; i++) {
                       var u = v[i];
-                      console.log(u)
                       u.angle += u.speed * 0.01;
                       u.x = Math.cos(u.angle) * u.radius;
                       u.z = Math.sin(u.angle) * u.radius;
