@@ -29,7 +29,7 @@
       }
 
       g.legendOrdinal {
-        font-family: 'Ubuntu', sans-serif;
+        font-family: 'Lucida Grande', sans-serif;
         font-weight: bold;
         font-size: 15px;
       }
@@ -52,7 +52,7 @@
         height: 40px;
         padding: 8px;
         margin-top: -20px;
-        font: 15px 'Ubuntu';
+        font: 15px 'Lucida Grande';
         font-weight:bold;
         background: none;
         pointer-events: none;
@@ -72,8 +72,9 @@
         text-align:left;
         height: auto;
         width: 500px;
-        font-family: 'Ubuntu';
+        font-family: 'Lucida Grande';
         font-weight: bold;
+        transform: translate(-230px,50px);
       }
       .radioButtons2{
         position: relative;
@@ -82,8 +83,9 @@
         text-align:left;
         height: auto;
         width: 500px;
-        font-family: 'Ubuntu';
+        font-family: 'Lucida Grande';
         font-weight: bold;
+        transform: translate(-230px,50px);
       }    
       .button {
         background-color: #4CAF50;
@@ -148,7 +150,7 @@
               var projection = d3.geoMercator()
                 .center([-73.94, 40.70])
                 .translate([w / 2, h / 2])
-                .scale([60000]);
+                .scale([57000]);
 
               var path = d3.geoPath()
                 .projection(projection);
@@ -324,7 +326,7 @@
                 .attr("text-anchor", "middle")  
                 .style("font-size", "20px") 
                 .style("font-weight", 'bold')
-                .style('font-family', 'Ubuntu')  
+                .style('font-family', 'Lucida Grande')  
                 .text(function(){
                   return 'K = ' + k;
                 })
@@ -714,7 +716,7 @@
             var projection = d3.geoMercator()
               .center([-73.94, 40.70])
               .translate([w / 2, h / 2])
-              .scale([60000]);
+              .scale([57000]);
 
             var path = d3.geoPath()
               .projection(projection);
@@ -780,7 +782,7 @@
 
               knnMap.append("g")
                 .attr('class', 'legendOrdinal')
-                .attr('transform', 'translate(180,60)');
+                .attr('transform', 'translate(60,60)');
 
               var legendOrdinal = d3.legendColor()
                 .shape('path', d3.symbol().type(d3.symbolSquare).size(150)())
@@ -914,7 +916,7 @@
 
                 var g = nyczipmap.append("g")
                   .attr("class", "key")
-                  .attr("transform", "translate(-400,80)");
+                  .attr("transform", "translate(-580,80)");
 
                 g.selectAll("rect")
                   .data(color.range().map(function(d) {
@@ -937,12 +939,12 @@
                     .attr("text-anchor", "start")
                     .attr("font-weight", "bold")
                     .text("Number of Complaints")
-                    .attr('font-family', 'Ubuntu');
+                    .attr('font-family', 'Lucida Grande');
 
                 g.append('text')
                     .attr('x', x.range()[0])
                     .attr('y', 20)
-                    .attr('font-family', 'Ubuntu')
+                    .attr('font-family', 'Lucida Grande')
                     .attr('font-size', 10)
                     .text('LOW 0~');
 
@@ -950,7 +952,7 @@
                     .attr('x', x.range()[1])
                     .attr('y', 20)
                     .attr('text-anchor', 'end')
-                    .attr('font-family', 'Ubuntu')
+                    .attr('font-family', 'Lucida Grande')
                     .attr('font-size', 10)
                     .text('~37000 HIGH');
 
@@ -1043,7 +1045,7 @@
                 .attr('font-weight', 'bold')
                 .attr('text-align', 'center')
                 .attr('text-anchor', 'middle')
-                .attr('font-family', 'Ubuntu')
+                .attr('font-family', 'Lucida Grande')
                 .attr('background', 'blue');
 
               var tt = d3.select("body").append("div")
